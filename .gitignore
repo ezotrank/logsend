@@ -1,0 +1,3 @@
+/_vendor
+/tmp
+/influxdb.log*

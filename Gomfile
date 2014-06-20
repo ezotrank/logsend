@@ -1,0 +1,2 @@
+gom 'github.com/ActiveState/tail'
+gom 'github.com/influxdb/influxdb-go'
