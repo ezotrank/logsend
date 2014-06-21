@@ -5,46 +5,25 @@ import (
 	"encoding/json"
 	"os"
 	"regexp"
-	logpkg "log"
 	"strconv"
-	"fmt"
-	"github.com/influxdb/influxdb-go"
-	"net/http"
 )
 
-var (
-	Log        = logpkg.New(os.Stdout, "", logpkg.Lmicroseconds)
-)
-
-var DBClientConfig = &influxdb.ClientConfig{
-		Host:       "localhost:8086",
-		Username:   "root",
-		Password:   "root",
-		Database:   "test1",
-		HttpClient: http.DefaultClient,
-	}
-
-	var DBClient, err = influxdb.NewClient(DBClientConfig)
-
-type Config struct {
-	Groups []Group `json:"groups"`
-}
-
-func LoadConfig(fileName string) (c *Config, err error) {
-	config := &Config{}
+func LoadConfig(fileName string) (config *Config, err error) {
 	var file *os.File
+	var tmpConfig *Config
 	file, err = os.OpenFile(fileName, os.O_RDWR, 0644)
 	if err != nil {
 		return
 	}
 	defer file.Close()
 	brules, _ := ioutil.ReadAll(file)
-	err = json.Unmarshal(brules, config)
-	if err != nil {
-		return
-	}
-	c = config
+	err = json.Unmarshal(brules, &tmpConfig)
+	config = tmpConfig
 	return
+}
+
+type Config struct {
+	Groups []Group `json:"groups"`
 }
 
 type Group struct {
@@ -53,19 +32,16 @@ type Group struct {
 	regex *regexp.Regexp
 }
 
-func (group *Group) MatchLogLine(str string) bool {
+func (group *Group) Match(line string) bool {
 	if group.regex == nil {
-		Log.Println("assign regexp")
-		r,err := regexp.Compile(group.Mask)
-		group.regex = r
+		regex,err := regexp.Compile(group.Mask)
 		if err != nil {
-			Log.Printf("%+v, %+v", err, str)
+			log.Printf("group match err %+v", err)
+			return false
 		}
+		group.regex = regex
 	}
-	if group.regex.MatchString(str) {
-		return true
-	}
-	return false
+	return group.regex.MatchString(line)
 }
 
 type Rule struct {
@@ -76,49 +52,34 @@ type Rule struct {
 	regex *regexp.Regexp
 }
 
-func leadToType(obj string, objt string) (result interface{}, err error) {
-	switch objt {
+func leadToType(val string, valType string) (result interface{}, err error) {
+	switch valType {
 	case "int":
-		result, err = strconv.ParseInt(obj, 0, 64)
+		result, err = strconv.ParseInt(val, 0, 64)
 	}
 	return
 }
 
-func (rule *Rule) MatchLogLine(str string) (matches []interface{}, err error) {
+func (rule *Rule) Match(line string) (matches []interface{}) {
 	if rule.regex == nil {
-		Log.Println("assign regexp")
-		r,err := regexp.Compile(rule.PointersRegexp)
-		rule.regex = r
+		regex,err := regexp.Compile(rule.PointersRegexp)
 		if err != nil {
-			Log.Printf("%+v, %+v", err, str)
+			log.Printf("rule match err %+v", err)
 		}
+		rule.regex = regex
 	}
-	out := make([]interface{},0)
-	if rule.regex.MatchString(str) {
-		finded := rule.regex.FindStringSubmatch(str)
-		finded = append(finded[1:])
-		for i,obj := range finded {
-			val, err := leadToType(obj, rule.Types[i])
-			if err != nil {
-				Log.Fatalf("MatchLogLine %+v %+v", val, err)
-			}
-			out = append(out, val)
-		}
-		matches = out
-		Log.Println(out)
+	if !rule.regex.MatchString(line) {
 		return
 	}
-	err = fmt.Errorf("cant find")
+	submatches := rule.regex.FindStringSubmatch(line)
+	submatches = append(submatches[1:])
+	for i,obj := range submatches {
+		val, err := leadToType(obj, rule.Types[i])
+		if err != nil {
+			log.Fatalf("MatchLogLine %+v %+v", val, err)
+		}
+		matches = append(matches, val)
+	}
 	return
 }
 
-func (rule *Rule) MakeJSON(str []interface{}) (err error) {
-	series := &influxdb.Series{}
-	out := [][]interface{}{str}
-	series.Name = rule.Name
-	series.Columns = rule.Columns
-	series.Points = out
-	seriesT := []*influxdb.Series{series}
-	go DBClient.WriteSeries(seriesT)
-	return
-}

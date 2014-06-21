@@ -1,100 +1,50 @@
 package main
 
 import (
-	"github.com/ActiveState/tail"
-	"io/ioutil"
 	"flag"
-	"os"
 	"./logsend"
-	"fmt"
+	"os"
 	logpkg "log"
 )
 
 var (
-	Log        = logpkg.New(os.Stdout, "", logpkg.Lmicroseconds)
-	LogDir     = flag.String("log-dir", "./tmp", "log directories")
+	logDir  = flag.String("log-dir", "./tmp", "log directories")
+	config = flag.String("config", "config.json", "path to config.json file")
+	dbhost = flag.String("db-host", "localhost:8086", "db host")
+	dbuser = flag.String("db-user", "root", "db user")
+	dbpassword = flag.String("db-password", "root", "db-password")
+	database = flag.String("database", "test1", "database")
 )
 
-type LogFilesGroup struct {
-	LogFiles []*LogFile
-	Config *logsend.Group
-}
-
-func (lfg *LogFilesGroup) Tailing() {
-	for _, log := range lfg.LogFiles {
-		go func(lf *LogFile){
-			for line := range lf.Tail.Lines {
-				for _,rule := range lfg.Config.Rules {
-					match,err := rule.MatchLogLine(line.Text)
-					if err != nil { continue }
-					err = rule.MakeJSON(match)
-					if err != nil {
-						Log.Println(err)
-					}
-				}
-			}
-		}(log)
-	}
-}
-
-func (lfg *LogFilesGroup) AppendLog(log *LogFile) {
-	lfg.LogFiles = append(lfg.LogFiles, log)
-	return
-}
-
-type LogFile struct {
-	Tail *tail.Tail
-}
-
-func NewLogFile(filename string) (*LogFile, error) {
-	var err error
-	logfile := &LogFile{}
-	logfile.Tail, err = tail.TailFile(filename, tail.Config{Follow: true, ReOpen: true})
-	return logfile, err
-}
-
-func GetFilesFromDir(dir string) ([]os.FileInfo, error) {
-	files, err := ioutil.ReadDir(dir)
-	return files, err
-}
+var (
+	log = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
+)
 
 func main() {
 	flag.Parse()
-	Log.SetFlags(0)
+	log.SetFlags(0)
 
-	config, err := logsend.LoadConfig("config.json")
+	config, err := logsend.LoadConfig(*config)
 	if err != nil {
-		Log.Fatalf("can't load config")
+		log.Fatalf("can't load config %+v", err)
 	}
 
-	LogFilesGroups := make([]*LogFilesGroup, 0)
+	logsScopes := make([]*logsend.LogScope, 0)
+
 	for _, group := range config.Groups {
-		lfg := &LogFilesGroup{Config: &group}
-		LogFilesGroups = append(LogFilesGroups, lfg)
+		lsc := logsend.NewLogScope(&group)
+		logsScopes = append(logsScopes, lsc)
 	}
 
-	files, err := GetFilesFromDir(*LogDir)
+	logsend.AssociatedLogPerFile(*logDir, logsScopes)
+	dbClient, err := logsend.NewDBClient(*dbhost, *dbuser, *dbpassword, *database)
 	if err != nil {
-		Log.Fatalln(err)
-	}
-	for _,f := range files {
-		for _,lfg := range LogFilesGroups {
-			fmt.Printf("%s/%s", *LogDir, f.Name())
-			if lfg.Config.MatchLogLine(f.Name()) {
-				Log.Println("match")
-				logFile, err := NewLogFile(fmt.Sprintf("%s/%s", *LogDir, f.Name()))
-				if err != nil {
-					Log.Fatalln(err)
-				}
-				lfg.AppendLog(logFile)
-			}
-		}
+		log.Fatalf("NewDBClient %+v", err)
 	}
 
-	for _,lfg := range LogFilesGroups {
-		go lfg.Tailing()
+	for _,lsc := range logsScopes {
+		go lsc.Tailing(dbClient)
 	}
-
 
 	select{}
 }
