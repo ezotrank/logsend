@@ -5,12 +5,16 @@
       "rules": [
         {
           "name": "keys_count",
-          "points_regexp": "metric dbcount ([0-9]+)$",
-          "types": [
-            "int"
-          ],
+          "regexp": "metric dbcount ([0-9]+)$",
           "columns": [
-            "count"
+            ["count", "int"]
+          ]
+        },
+        {
+          "name": "prepare_proposals",
+          "regexp": "PreapreProposals took (.+)$",
+          "columns": [
+            ["duration", "int", "DurationToMillisecond"]
           ]
         }
       ]

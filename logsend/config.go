@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"os"
 	"regexp"
-	"strconv"
 )
 
 func LoadConfig(fileName string) (config *Config, err error) {
@@ -46,23 +45,34 @@ func (group *Group) Match(line string) bool {
 
 type Rule struct {
 	Name string `json:"name"`
-	PointersRegexp string `json:"points_regexp"`
-	Types []string `json:types`
-	Columns []string `json:columns`
+	Regexp string `json:"regexp"`
+	Columns [][]string `json:"columns"`
 	regex *regexp.Regexp
 }
 
-func leadToType(val string, valType string) (result interface{}, err error) {
-	switch valType {
-	case "int":
-		result, err = strconv.ParseInt(val, 0, 64)
+func GetValues(svals []string, rculumns [][]string) (columns []string, points []interface{}, err error) {
+	for index,val := range svals {
+		columns = append(columns, rculumns[index][0])
+		var ival interface{}
+		if len(rculumns[index]) == 1 {
+			points = append(points, val)
+		} else if len(rculumns[index]) == 2 {
+			ival, err := LeadToType(val, rculumns[index][1])
+			if err != nil {
+				log.Fatalf("GetValues %+v", err)
+			}
+			points = append(points, ival)
+		} else {
+			ival, err = ConvertToPoint(val, rculumns[index][2])
+			points = append(points, ival)
+		}
 	}
 	return
 }
 
-func (rule *Rule) Match(line string) (matches []interface{}) {
+func (rule *Rule) Match(line string) (matches []string) {
 	if rule.regex == nil {
-		regex,err := regexp.Compile(rule.PointersRegexp)
+		regex,err := regexp.Compile(rule.Regexp)
 		if err != nil {
 			log.Printf("rule match err %+v", err)
 		}
@@ -71,15 +81,8 @@ func (rule *Rule) Match(line string) (matches []interface{}) {
 	if !rule.regex.MatchString(line) {
 		return
 	}
-	submatches := rule.regex.FindStringSubmatch(line)
-	submatches = append(submatches[1:])
-	for i,obj := range submatches {
-		val, err := leadToType(obj, rule.Types[i])
-		if err != nil {
-			log.Fatalf("MatchLogLine %+v %+v", val, err)
-		}
-		matches = append(matches, val)
-	}
+	matches = rule.regex.FindStringSubmatch(line)
+	matches = append(matches[1:])
 	return
 }
 

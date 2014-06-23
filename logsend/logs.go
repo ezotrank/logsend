@@ -29,7 +29,11 @@ func (lsc *LogScope) Tailing(client *influxdb.Client) {
 					if len(match) == 0 {
 						continue
 					}
-					series := GetSeries(&rule, match)
+					colums, values, err := GetValues(match, rule.Columns)
+					if err != nil {
+						log.Printf("GetValues err %+v", err)
+					}
+					series := GetSeries(&rule, colums, values)
 					go SendSeries(series, client)
 				}
 			}

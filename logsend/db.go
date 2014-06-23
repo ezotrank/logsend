@@ -17,17 +17,17 @@ func NewDBClient(host, user, password, database string) (*influxdb.Client, error
 	return client, err
 }
 
-func GetSeries(rule *Rule, data []interface{}) (seriesT []*influxdb.Series) {
+func GetSeries(rule *Rule, columns []string, values []interface{}) (seriesT []*influxdb.Series) {
 	series := &influxdb.Series{}
-	out := [][]interface{}{data}
+	out := [][]interface{}{values}
 	series.Name = rule.Name
-	series.Columns = rule.Columns
+	series.Columns = columns
 	series.Points = out
 	seriesT = append(seriesT, series)
 	return
 }
 
 func SendSeries(series []*influxdb.Series, client *influxdb.Client) {
-	debug("write series")
+	debug("write series", series[0].Name, series[0].Columns, series[0].Points)
 	go client.WriteSeries(series)
 }
