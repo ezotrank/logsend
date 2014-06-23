@@ -8,16 +8,13 @@ import (
 )
 
 func LoadConfig(fileName string) (config *Config, err error) {
-	var file *os.File
-	var tmpConfig *Config
-	file, err = os.OpenFile(fileName, os.O_RDWR, 0644)
+	file, err := os.OpenFile(fileName, os.O_RDWR, 0644)
 	if err != nil {
 		return
 	}
 	defer file.Close()
 	brules, _ := ioutil.ReadAll(file)
-	err = json.Unmarshal(brules, &tmpConfig)
-	config = tmpConfig
+	err = json.Unmarshal(brules, &config)
 	return
 }
 
