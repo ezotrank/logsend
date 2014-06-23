@@ -26,6 +26,8 @@ func LeadToType(val, valType string) (result interface{}, err error) {
 	switch valType {
 	case "int":
 		result, err = strconv.ParseInt(val, 0, 64)
+	case "float":
+		result, err = strconv.ParseFloat(val, 64)
 	default:
 		result = val
 	}

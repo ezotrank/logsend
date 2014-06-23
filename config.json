@@ -1,5 +1,23 @@
 {
     "groups": [
+      {
+          "mask": "bee.[0-9]+.log$",
+          "rules": [
+              {
+                  "columns": [
+                      [
+                          "gate"
+                      ],
+                      [
+                        "exec_time",
+                        "float"
+                      ]
+                  ],
+                  "name": "gate_response",
+                  "regexp": "chain_processor.+ .+MIRROR] ([a-zA-Z0-9_]+)_gate -> (.+)"
+              }
+          ]
+      },
         {
             "mask": "search.log",
             "rules": [

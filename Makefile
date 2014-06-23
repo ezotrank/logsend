@@ -8,6 +8,7 @@ all:
 	gom test ./logsend
 	go vet ./logsend
 	gom build -o vendor/bin/logsend ./main.go
+	GOOS=linux gom build -o vendor/bin/logsend_linux ./main.go
 
 nuke:
 	go clean -i
