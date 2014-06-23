@@ -1,8 +1,8 @@
 package logsend
 
 import (
-	"time"
 	"strconv"
+	"time"
 )
 
 func ConvertToPoint(val, convert string) (result interface{}, err error) {

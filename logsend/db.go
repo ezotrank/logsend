@@ -1,12 +1,12 @@
 package logsend
 
 import (
-	"net/http"
 	"github.com/influxdb/influxdb-go"
+	"net/http"
 )
 
 func NewDBClient(host, user, password, database string) (*influxdb.Client, error) {
-	config :=  &influxdb.ClientConfig{
+	config := &influxdb.ClientConfig{
 		Host:       host,
 		Username:   user,
 		Password:   password,

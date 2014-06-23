@@ -1,11 +1,11 @@
 package logsend
 
 import (
-	"path/filepath"
 	"github.com/ActiveState/tail"
 	"github.com/influxdb/influxdb-go"
-	"regexp"
 	"io/ioutil"
+	"path/filepath"
+	"regexp"
 )
 
 func NewLogScope(group Group) *LogScope {
@@ -15,16 +15,16 @@ func NewLogScope(group Group) *LogScope {
 }
 
 type LogScope struct {
-	Logs []*Log
+	Logs        []*Log
 	ConfigGroup *Group
 }
 
 func (lsc *LogScope) Tailing(client *influxdb.Client) {
 	for _, logf := range lsc.Logs {
-		go func(lg *Log){
+		go func(lg *Log) {
 			log.Printf("start tailing %+v", lg.Tail.Filename)
 			for line := range lg.Tail.Lines {
-				for _,rule := range lsc.ConfigGroup.Rules {
+				for _, rule := range lsc.ConfigGroup.Rules {
 					match := rule.Match(line.Text)
 					if len(match) == 0 {
 						continue
@@ -63,7 +63,7 @@ func GetFilesByName(dir, mask string) (files []string, err error) {
 		return
 	}
 	regex := regexp.MustCompile(mask)
-	for _,f := range dfiles {
+	for _, f := range dfiles {
 		if !regex.MatchString(f.Name()) {
 			continue
 		}
@@ -74,11 +74,11 @@ func GetFilesByName(dir, mask string) (files []string, err error) {
 
 func AssociatedLogPerFile(dir string, logsScopes *[]*LogScope) {
 	for _, lsc := range *logsScopes {
-		files,err := GetFilesByName(dir, lsc.ConfigGroup.Mask)
+		files, err := GetFilesByName(dir, lsc.ConfigGroup.Mask)
 		if err != nil {
 			log.Fatalf("GetFilsByName %+v", err)
 		}
-		for _,file := range files {
+		for _, file := range files {
 			logf, err := NewLogFile(file)
 			if err != nil {
 				log.Fatalf("NewLogFile %+v", err)

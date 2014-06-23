@@ -2,3 +2,4 @@
 /tmp
 /influxdb.log*
 /_builds
+/vendor

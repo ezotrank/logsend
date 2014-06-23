@@ -1,19 +1,19 @@
 package main
 
 import (
-	"flag"
 	"./logsend"
-	"os"
+	"flag"
 	logpkg "log"
+	"os"
 )
 
 var (
-	logDir  = flag.String("log-dir", "./tmp", "log directories")
-	config = flag.String("config", "config.json", "path to config.json file")
-	dbhost = flag.String("db-host", "localhost:8086", "db host")
-	dbuser = flag.String("db-user", "root", "db user")
+	logDir     = flag.String("log-dir", "./tmp", "log directories")
+	config     = flag.String("config", "config.json", "path to config.json file")
+	dbhost     = flag.String("db-host", "localhost:8086", "db host")
+	dbuser     = flag.String("db-user", "root", "db user")
 	dbpassword = flag.String("db-password", "root", "db-password")
-	database = flag.String("database", "test1", "database")
+	database   = flag.String("database", "test1", "database")
 )
 
 var (
@@ -42,9 +42,9 @@ func main() {
 		log.Fatalf("NewDBClient %+v", err)
 	}
 
-	for _,lsc := range logsScopes {
+	for _, lsc := range logsScopes {
 		go lsc.Tailing(dbClient)
 	}
 
-	select{}
+	select {}
 }

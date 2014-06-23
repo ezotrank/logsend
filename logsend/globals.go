@@ -1,16 +1,18 @@
 package logsend
 
 import (
-	"os"
 	logpkg "log"
+	"os"
 )
 
 var (
-	log = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
+	log        = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
 	debugState = true
 )
 
 func debug(msg ...interface{}) {
-	if !debugState { return }
+	if !debugState {
+		return
+	}
 	log.Printf("debug: %+v", msg)
 }

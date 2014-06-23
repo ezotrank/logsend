@@ -1,8 +1,8 @@
 package logsend
 
 import (
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"regexp"
 )
@@ -23,14 +23,14 @@ type Config struct {
 }
 
 type Group struct {
-	Mask string `json:"mask"`
+	Mask  string `json:"mask"`
 	Rules []Rule `json:"rules"`
 	regex *regexp.Regexp
 }
 
 func (group *Group) Match(line string) bool {
 	if group.regex == nil {
-		regex,err := regexp.Compile(group.Mask)
+		regex, err := regexp.Compile(group.Mask)
 		if err != nil {
 			log.Printf("group match err %+v", err)
 			return false
@@ -41,14 +41,14 @@ func (group *Group) Match(line string) bool {
 }
 
 type Rule struct {
-	Name string `json:"name"`
-	Regexp string `json:"regexp"`
+	Name    string     `json:"name"`
+	Regexp  string     `json:"regexp"`
 	Columns [][]string `json:"columns"`
-	regex *regexp.Regexp
+	regex   *regexp.Regexp
 }
 
 func GetValues(svals []string, rculumns [][]string) (columns []string, points []interface{}, err error) {
-	for index,val := range svals {
+	for index, val := range svals {
 		columns = append(columns, rculumns[index][0])
 		var ival interface{}
 		if len(rculumns[index]) == 1 {
@@ -69,7 +69,7 @@ func GetValues(svals []string, rculumns [][]string) (columns []string, points []
 
 func (rule *Rule) Match(line string) (matches []string) {
 	if rule.regex == nil {
-		regex,err := regexp.Compile(rule.Regexp)
+		regex, err := regexp.Compile(rule.Regexp)
 		if err != nil {
 			log.Printf("rule match err %+v", err)
 		}
@@ -82,4 +82,3 @@ func (rule *Rule) Match(line string) (matches []string) {
 	matches = append(matches[1:])
 	return
 }
-
