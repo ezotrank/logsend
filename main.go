@@ -14,6 +14,8 @@ var (
 	dbuser     = flag.String("db-user", "root", "db user")
 	dbpassword = flag.String("db-password", "root", "db-password")
 	database   = flag.String("database", "test1", "database")
+	debug      = flag.Bool("debug", false, "turn on debug messages")
+	sendBuffer = flag.Int("send-buffer", 25, "send buffer")
 )
 
 var (
@@ -23,6 +25,9 @@ var (
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
+
+	logsend.SendBuffer = *sendBuffer
+	logsend.Debug = *debug
 
 	config, err := logsend.LoadConfig(*config)
 	if err != nil {

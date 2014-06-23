@@ -7,11 +7,12 @@ import (
 
 var (
 	log        = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
-	debugState = true
+	Debug      = true
+	SendBuffer = 50
 )
 
 func debug(msg ...interface{}) {
-	if !debugState {
+	if !Debug {
 		return
 	}
 	log.Printf("debug: %+v", msg)
