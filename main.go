@@ -32,11 +32,11 @@ func main() {
 	logsScopes := make([]*logsend.LogScope, 0)
 
 	for _, group := range config.Groups {
-		lsc := logsend.NewLogScope(&group)
+		lsc := logsend.NewLogScope(group)
 		logsScopes = append(logsScopes, lsc)
 	}
 
-	logsend.AssociatedLogPerFile(*logDir, logsScopes)
+	logsend.AssociatedLogPerFile(*logDir, &logsScopes)
 	dbClient, err := logsend.NewDBClient(*dbhost, *dbuser, *dbpassword, *database)
 	if err != nil {
 		log.Fatalf("NewDBClient %+v", err)

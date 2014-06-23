@@ -8,9 +8,9 @@ import (
 	"io/ioutil"
 )
 
-func NewLogScope(group *Group) *LogScope {
+func NewLogScope(group Group) *LogScope {
 	lsc := &LogScope{}
-	lsc.ConfigGroup = group
+	lsc.ConfigGroup = &group
 	return lsc
 }
 
@@ -72,8 +72,8 @@ func GetFilesByName(dir, mask string) (files []string, err error) {
 	return
 }
 
-func AssociatedLogPerFile(dir string, logsScopes []*LogScope) {
-	for _, lsc := range logsScopes {
+func AssociatedLogPerFile(dir string, logsScopes *[]*LogScope) {
+	for _, lsc := range *logsScopes {
 		files,err := GetFilesByName(dir, lsc.ConfigGroup.Mask)
 		if err != nil {
 			log.Fatalf("GetFilsByName %+v", err)

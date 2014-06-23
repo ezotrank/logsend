@@ -1,24 +1,67 @@
 {
-  "groups": [
-    {
-      "mask": "[a-z]+.log",
-      "rules": [
+    "groups": [
         {
-          "name": "keys_count",
-          "regexp": "metric dbcount ([0-9]+)$",
-          "columns": [
-            ["count", "int"]
-          ]
+            "mask": "search.log",
+            "rules": [
+                {
+                    "columns": [
+                        [
+                            "search",
+                            "int"
+                        ]
+                    ],
+                    "name": "keys_count",
+                    "regexp": "metric dbcount ([0-9]+)$"
+                },
+                {
+                    "columns": [
+                        [
+                            "search_prepare_proposals",
+                            "int",
+                            "DurationToMillisecond"
+                        ]
+                    ],
+                    "name": "db",
+                    "regexp": "PreapreProposals took (.+)$"
+                }
+            ]
         },
         {
-          "name": "prepare_proposals",
-          "regexp": "PreapreProposals took (.+)$",
-          "columns": [
-            ["duration", "int", "DurationToMillisecond"]
-          ]
+            "mask": "map.log",
+            "rules": [
+                {
+                    "columns": [
+                        [
+                            "map",
+                            "int"
+                        ]
+                    ],
+                    "name": "keys_count",
+                    "regexp": "metric dbcount ([0-9]+)$"
+                },
+                {
+                    "columns": [
+                        [
+                            "map_prepare_proposals",
+                            "int",
+                            "DurationToMillisecond"
+                        ]
+                    ],
+                    "name": "db",
+                    "regexp": "PreapreProposals took (.+)$"
+                },
+                {
+                    "columns": [
+                        [
+                            "map_save_proposals",
+                            "int",
+                            "DurationToMillisecond"
+                        ]
+                    ],
+                    "name": "db",
+                    "regexp": "SaveProposalsForMap took (.+)$"
+                }
+            ]
         }
-      ]
-    }
-  ]
-
+    ]
 }
