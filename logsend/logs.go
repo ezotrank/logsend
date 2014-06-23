@@ -43,7 +43,6 @@ func (lsc *LogScope) Tailing(client *influxdb.Client) {
 
 func (ls *LogScope) Append(log *Log) {
 	ls.Logs = append(ls.Logs, log)
-	return
 }
 
 type Log struct {
