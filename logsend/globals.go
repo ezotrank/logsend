@@ -12,10 +12,10 @@ var (
 )
 
 var Conf = struct {
-	DBHost string
-	DBUser string
+	DBHost     string
+	DBUser     string
 	DBPassword string
-	DBName string
+	DBName     string
 }{
 	"localhost:8086",
 	"root",
