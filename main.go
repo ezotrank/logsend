@@ -3,8 +3,6 @@ package main
 import (
 	"./logsend"
 	"flag"
-	logpkg "log"
-	"os"
 )
 
 var (
@@ -18,13 +16,8 @@ var (
 	sendBuffer = flag.Int("send-buffer", 25, "send buffer")
 )
 
-var (
-	log = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
-)
-
 func main() {
 	flag.Parse()
-	log.SetFlags(0)
 
 	logsend.SendBuffer = *sendBuffer
 	logsend.Debug = *debug
