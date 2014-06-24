@@ -11,6 +11,18 @@ var (
 	SendBuffer = 50
 )
 
+var Conf = struct {
+	DBHost string
+	DBUser string
+	DBPassword string
+	DBName string
+}{
+	"localhost:8086",
+	"root",
+	"root",
+	"test1",
+}
+
 func debug(msg ...interface{}) {
 	if !Debug {
 		return

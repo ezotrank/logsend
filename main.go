@@ -28,28 +28,10 @@ func main() {
 
 	logsend.SendBuffer = *sendBuffer
 	logsend.Debug = *debug
+	logsend.Conf.DBHost = *dbhost
+	logsend.Conf.DBUser = *dbuser
+	logsend.Conf.DBPassword = *dbpassword
+	logsend.Conf.DBName = *database
 
-	config, err := logsend.LoadConfig(*config)
-	if err != nil {
-		log.Fatalf("can't load config %+v", err)
-	}
-
-	logsScopes := make([]*logsend.LogScope, 0)
-
-	for _, group := range config.Groups {
-		lsc := logsend.NewLogScope(group)
-		logsScopes = append(logsScopes, lsc)
-	}
-
-	logsend.AssociatedLogPerFile(*logDir, &logsScopes)
-	dbClient, err := logsend.NewDBClient(*dbhost, *dbuser, *dbpassword, *database)
-	if err != nil {
-		log.Fatalf("NewDBClient %+v", err)
-	}
-
-	for _, lsc := range logsScopes {
-		go lsc.Tailing(dbClient)
-	}
-
-	select {}
+	logsend.WatchLogs(*logDir, *config)
 }

@@ -8,6 +8,32 @@ import (
 	"regexp"
 )
 
+func WatchLogs(logDir, configFile string) {
+	config, err := LoadConfig(configFile)
+	if err != nil {
+		log.Fatalf("can't load config %+v", err)
+	}
+
+	logsScopes := make([]*LogScope, 0)
+
+	for _, group := range config.Groups {
+		lsc := NewLogScope(group)
+		logsScopes = append(logsScopes, lsc)
+	}
+
+	AssociatedLogPerFile(logDir, &logsScopes)
+	dbClient, err := NewDBClient()
+	if err != nil {
+		log.Fatalf("NewDBClient %+v", err)
+	}
+
+	for _, lsc := range logsScopes {
+		go lsc.Tailing(dbClient)
+	}
+
+	select {}
+}
+
 func NewLogScope(group Group) *LogScope {
 	lsc := &LogScope{}
 	lsc.ConfigGroup = &group

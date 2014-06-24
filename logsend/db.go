@@ -9,12 +9,12 @@ var (
 	SenderCh = make(chan *influxdb.Series)
 )
 
-func NewDBClient(host, user, password, database string) (*influxdb.Client, error) {
+func NewDBClient() (*influxdb.Client, error) {
 	config := &influxdb.ClientConfig{
-		Host:       host,
-		Username:   user,
-		Password:   password,
-		Database:   database,
+		Host:       Conf.DBHost,
+		Username:   Conf.DBUser,
+		Password:   Conf.DBPassword,
+		Database:   Conf.DBName,
 		HttpClient: http.DefaultClient,
 	}
 	client, err := influxdb.NewClient(config)
