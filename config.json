@@ -1,23 +1,36 @@
 {
     "groups": [
-      {
-          "mask": "bee.[0-9]+.log$",
-          "rules": [
-              {
-                  "columns": [
-                      [
-                          "gate"
-                      ],
-                      [
-                        "exec_time",
-                        "float"
-                      ]
-                  ],
-                  "name": "gate_response",
-                  "regexp": "chain_processor.+ .+MIRROR] ([a-zA-Z0-9_]+)_gate -> (.+)"
-              }
-          ]
-      },
+        {
+            "mask": "bee.[0-9]+.log$",
+            "rules": [
+                {
+                    "columns": [
+                        [
+                            "gate"
+                        ],
+                        [
+                            "exec_time",
+                            "float"
+                        ]
+                    ],
+                    "name": "gate_response",
+                    "regexp": "chain_processor.+ .+MIRROR] ([a-zA-Z0-9_]+)_gate -> (.+)"
+                },
+                {
+                    "columns": [
+                        [
+                            "code",
+                            "int"
+                        ],
+                        [
+                            "chains"
+                        ]
+                    ],
+                    "name": "chains",
+                    "regexp": "web.+] ([0-9]+) .+ /adaptors/chains/([a-zA-Z0-9_]+)"
+                }
+            ]
+        },
         {
             "mask": "search.log",
             "rules": [
