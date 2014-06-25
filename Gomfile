@@ -1,2 +1,2 @@
 gom 'github.com/ActiveState/tail'
-gom 'github.com/influxdb/influxdb-go'
+gom 'github.com/ezotrank/influxdb-go', :branch => 'udp-support'

@@ -16,11 +16,13 @@ var Conf = struct {
 	DBUser     string
 	DBPassword string
 	DBName     string
+	UDP        bool
 }{
 	"localhost:8086",
 	"root",
 	"root",
 	"test1",
+	false,
 }
 
 func debug(msg ...interface{}) {

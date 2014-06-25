@@ -1,7 +1,7 @@
 package logsend
 
 import (
-	"github.com/influxdb/influxdb-go"
+	"github.com/ezotrank/influxdb-go"
 	"net/http"
 )
 
@@ -9,13 +9,14 @@ var (
 	SenderCh = make(chan *influxdb.Series)
 )
 
-func NewDBClient() (*influxdb.Client, error) {
+func NewDBClient() error {
 	config := &influxdb.ClientConfig{
 		Host:       Conf.DBHost,
 		Username:   Conf.DBUser,
 		Password:   Conf.DBPassword,
 		Database:   Conf.DBName,
 		HttpClient: http.DefaultClient,
+		IsUDP:      Conf.UDP,
 	}
 	client, err := influxdb.NewClient(config)
 	go func() {
@@ -23,14 +24,20 @@ func NewDBClient() (*influxdb.Client, error) {
 		for series := range SenderCh {
 			buf = append(buf, series)
 			if len(buf) >= SendBuffer {
-				debug("send series: ", buf)
-				go client.WriteSeries(buf)
+				if Conf.UDP {
+					debug("send series over udp: ", buf)
+					go client.WriteSeriesOverUDP(buf)
+				} else {
+					debug("send series over http: ", buf)
+					go client.WriteSeries(buf)
+				}
+
 				buf = make([]*influxdb.Series, 0)
 			}
 
 		}
 	}()
-	return client, err
+	return err
 }
 
 func GetSeries(rule *Rule, columns []string, values []interface{}) *influxdb.Series {
@@ -42,7 +49,7 @@ func GetSeries(rule *Rule, columns []string, values []interface{}) *influxdb.Ser
 	return &series
 }
 
-func SendSeries(series *influxdb.Series, client *influxdb.Client) {
+func SendSeries(series *influxdb.Series) {
 	SenderCh <- series
 	return
 }

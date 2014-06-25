@@ -2,7 +2,6 @@ package logsend
 
 import (
 	"github.com/ActiveState/tail"
-	"github.com/influxdb/influxdb-go"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -22,13 +21,13 @@ func WatchLogs(logDir, configFile string) {
 	}
 
 	AssociatedLogPerFile(logDir, &logsScopes)
-	dbClient, err := NewDBClient()
+	err = NewDBClient()
 	if err != nil {
 		log.Fatalf("NewDBClient %+v", err)
 	}
 
 	for _, lsc := range logsScopes {
-		go lsc.Tailing(dbClient)
+		go lsc.Tailing()
 	}
 
 	select {}
@@ -45,7 +44,7 @@ type LogScope struct {
 	ConfigGroup *Group
 }
 
-func (lsc *LogScope) Tailing(client *influxdb.Client) {
+func (lsc *LogScope) Tailing() {
 	for _, logf := range lsc.Logs {
 		go func(lg *Log) {
 			log.Printf("start tailing %+v", lg.Tail.Filename)
@@ -60,7 +59,7 @@ func (lsc *LogScope) Tailing(client *influxdb.Client) {
 						log.Printf("GetValues err %+v", err)
 					}
 					series := GetSeries(&rule, colums, values)
-					go SendSeries(series, client)
+					go SendSeries(series)
 				}
 			}
 		}(logf)
