@@ -19,16 +19,18 @@ func NewDBClient() error {
 		IsUDP:      Conf.UDP,
 	}
 	client, err := influxdb.NewClient(config)
+	client.DisableCompression()
 	go func() {
 		buf := make([]*influxdb.Series, 0)
 		for series := range SenderCh {
 			buf = append(buf, series)
 			if len(buf) >= SendBuffer {
+				debug("buf: ", buf)
 				if Conf.UDP {
-					debug("send series over udp: ", buf)
+					debug("send series over udp")
 					go client.WriteSeriesOverUDP(buf)
 				} else {
-					debug("send series over http: ", buf)
+					debug("send series over http")
 					go client.WriteSeries(buf)
 				}
 

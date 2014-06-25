@@ -23,11 +23,24 @@
                             "int"
                         ],
                         [
-                            "chains"
+                            "chain"
                         ]
                     ],
                     "name": "chains",
                     "regexp": "web.+] ([0-9]+) .+ /adaptors/chains/([a-zA-Z0-9_]+)"
+                },
+                {
+                    "columns": [
+                        [
+                            "gate_id",
+                            "int"
+                        ],
+                        [
+                            "host"
+                        ]
+                    ],
+                    "name": "clicks",
+                    "regexp": "deeplink.+] {.+ \"gate_id\": ([0-9]+), .+ \"host\": \"([a-z.]*)\""
                 }
             ]
         },
