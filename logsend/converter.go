@@ -1,9 +1,24 @@
 package logsend
 
 import (
+	"os"
 	"strconv"
 	"time"
 )
+
+func GetValue(vtype string) (result interface{}, err error) {
+	switch vtype {
+	case "GetHostname":
+		result, err = getHostname()
+	default:
+		result = vtype
+	}
+	return
+}
+
+func getHostname() (interface{}, error) {
+	return os.Hostname()
+}
 
 func ConvertToPoint(val, convert string) (result interface{}, err error) {
 	switch convert {
