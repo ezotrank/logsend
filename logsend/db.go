@@ -48,6 +48,7 @@ func GetSeries(rule *Rule, columns []string, values []interface{}) *influxdb.Ser
 	series.Columns = columns
 	points := [][]interface{}{values}
 	series.Points = points
+	debug(series)
 	return &series
 }
 

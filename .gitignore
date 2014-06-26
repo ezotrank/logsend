@@ -3,3 +3,4 @@
 /influxdb.log*
 /_builds
 /vendor
+/own_configs
