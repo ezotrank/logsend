@@ -23,15 +23,24 @@ build:
 deploy: build deploy_copy deploy_update_config deploy_restart
 
 deploy_copy:
-	ssh ${deploy_user}@${deploy_target} "mkdir -p ~/logsend"
-	scp vendor/bin/logsend_linux ${deploy_user}@${deploy_target}:"~/logsend/logsend_linux.NEW"
-	ssh ${deploy_user}@${deploy_target} "cd ~/logsend && mv logsend_linux.NEW logsend_linux"
+	for host in ${deploy_target}; do \
+		ssh ${deploy_user}@$$host "mkdir -p ~/logsend" ; \
+		scp vendor/bin/logsend_linux ${deploy_user}@$$host:"~/logsend/logsend_linux.NEW" ; \
+		ssh ${deploy_user}@$$host "cd ~/logsend && mv logsend_linux.NEW logsend_linux" ; \
+	done
+
 
 deploy_update_config:
-	scp ./own_configs/${deploy_config}_config.json ${deploy_user}@${deploy_target}:"~/logsend/config.json"
+	for host in ${deploy_target}; do \
+		scp ./own_configs/${deploy_config}_config.json ${deploy_user}@$$host:"~/logsend/config.json" ; \
+	done
+
 
 deploy_restart:
-	ssh ${deploy_user}@${deploy_target} "cd ~/logsend && cat logsend.pid |xargs kill || true"
+	for host in ${deploy_target}; do \
+		ssh ${deploy_user}@$$host "cd ~/logsend && cat logsend.pid |xargs kill || true" ; \
+	done
+
 
 nuke:
 	go clean -i
