@@ -88,5 +88,6 @@ series
 
 todo
 
+- describe converters
 - config checker
 - add new configs
