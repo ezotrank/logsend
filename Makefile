@@ -33,8 +33,6 @@ deploy_update_config:
 deploy_restart:
 	ssh ${deploy_user}@${deploy_target} "cd ~/logsend && cat logsend.pid |xargs kill || true"
 
-
-
 nuke:
 	go clean -i
 
