@@ -44,23 +44,29 @@ type LogScope struct {
 	ConfigGroup *Group
 }
 
+func checkLine(line *string, rules *[]Rule) error {
+	for _, rule := range *rules {
+		match := rule.Match(*line)
+		if len(match) == 0 {
+			continue
+		}
+		colums, values, err := GetValues(match, rule.Columns)
+		if err != nil {
+			log.Printf("GetValues err %+v", err)
+			return err
+		}
+		series := GetSeries(&rule, colums, values)
+		SendSeries(series)
+	}
+	return nil
+}
+
 func (lsc *LogScope) Tailing() {
 	for _, logf := range lsc.Logs {
 		go func(lg *Log) {
 			log.Printf("start tailing %+v", lg.Tail.Filename)
 			for line := range lg.Tail.Lines {
-				for _, rule := range lsc.ConfigGroup.Rules {
-					match := rule.Match(line.Text)
-					if len(match) == 0 {
-						continue
-					}
-					colums, values, err := GetValues(match, rule.Columns)
-					if err != nil {
-						log.Printf("GetValues err %+v", err)
-					}
-					series := GetSeries(&rule, colums, values)
-					go SendSeries(series)
-				}
+				go checkLine(&line.Text, &lsc.ConfigGroup.Rules)
 			}
 		}(logf)
 	}
