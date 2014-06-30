@@ -2,6 +2,7 @@ package logsend
 
 import (
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -33,5 +34,17 @@ func convertDurationToMillisecond(val string) (result interface{}, err error) {
 		return
 	}
 	result = duration.Nanoseconds() / 1000 / 1000
+	return
+}
+
+func LeadToType(val, valType string) (result interface{}, err error) {
+	switch valType {
+	case "int":
+		result, err = strconv.ParseInt(val, 0, 64)
+	case "float":
+		result, err = strconv.ParseFloat(val, 64)
+	default:
+		result = val
+	}
 	return
 }

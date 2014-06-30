@@ -53,6 +53,12 @@ func GetValues(svals []string, rculumns [][]string) (columns []string, points []
 		if index <= len(svals)-1 {
 			if len(col) == 1 {
 				points = append(points, svals[index])
+			} else if len(col) == 2 {
+				ival, err := LeadToType(svals[index], col[1])
+				if err != nil {
+					log.Fatalf("GetValues %+v", err)
+				}
+				points = append(points, ival)
 			} else {
 				ival, err := ConvertToPoint(svals[index], col[2])
 				if err != nil {
