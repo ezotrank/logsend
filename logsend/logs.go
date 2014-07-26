@@ -33,9 +33,9 @@ func WatchLogs(logDir, configFile string) {
 	select {}
 }
 
-func NewLogScope(group Group) *LogScope {
+func NewLogScope(group *Group) *LogScope {
 	lsc := &LogScope{}
-	lsc.ConfigGroup = &group
+	lsc.ConfigGroup = group
 	return lsc
 }
 
@@ -44,8 +44,8 @@ type LogScope struct {
 	ConfigGroup *Group
 }
 
-func checkLine(line *string, rules *[]Rule) error {
-	for _, rule := range *rules {
+func checkLine(line *string, rules []*Rule) error {
+	for _, rule := range rules {
 		match := rule.Match(*line)
 		if len(match) == 0 {
 			continue
@@ -55,7 +55,7 @@ func checkLine(line *string, rules *[]Rule) error {
 			log.Printf("GetValues err %+v", err)
 			return err
 		}
-		series := GetSeries(&rule, colums, values)
+		series := GetSeries(rule, colums, values)
 		SendSeries(series)
 	}
 	return nil
@@ -66,7 +66,7 @@ func (lsc *LogScope) Tailing() {
 		go func(lg *Log) {
 			log.Printf("start tailing %+v", lg.Tail.Filename)
 			for line := range lg.Tail.Lines {
-				go checkLine(&line.Text, &lsc.ConfigGroup.Rules)
+				go checkLine(&line.Text, lsc.ConfigGroup.Rules)
 			}
 		}(logf)
 	}

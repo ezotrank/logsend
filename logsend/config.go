@@ -7,25 +7,39 @@ import (
 	"regexp"
 )
 
-func LoadConfig(fileName string) (config *Config, err error) {
+func LoadConfig(fileName string) (*Config, error) {
+	config := &Config{}
 	file, err := os.OpenFile(fileName, os.O_RDWR, 0644)
 	if err != nil {
-		return
+		return nil, err
 	}
 	defer file.Close()
 	brules, _ := ioutil.ReadAll(file)
-	err = json.Unmarshal(brules, &config)
-	return
+	if err := json.Unmarshal(brules, &config); err != nil {
+		return nil, err
+	}
+	for _, group := range config.Groups {
+		group.loadRulesRegexp()
+	}
+	return config, nil
 }
 
 type Config struct {
-	Groups []Group `json:"groups"`
+	Groups []*Group `json:"groups"`
 }
 
 type Group struct {
-	Mask  string `json:"mask"`
-	Rules []Rule `json:"rules"`
+	Mask  string  `json:"mask"`
+	Rules []*Rule `json:"rules"`
 	regex *regexp.Regexp
+}
+
+func (self *Group) loadRulesRegexp() {
+	for _, rule := range self.Rules {
+		if err := rule.loadRegexp(); err != nil {
+			log.Panicf("can't load regexp %+v", err)
+		}
+	}
 }
 
 func (group *Group) Match(line string) bool {
@@ -45,6 +59,11 @@ type Rule struct {
 	Regexp  string     `json:"regexp"`
 	Columns [][]string `json:"columns"`
 	regex   *regexp.Regexp
+}
+
+func (self *Rule) loadRegexp() (err error) {
+	self.regex, err = regexp.Compile(self.Regexp)
+	return
 }
 
 func GetValues(svals []string, rculumns [][]string) (columns []string, points []interface{}, err error) {
@@ -82,17 +101,11 @@ func GetValues(svals []string, rculumns [][]string) (columns []string, points []
 }
 
 func (rule *Rule) Match(line string) (matches []string) {
-	if rule.regex == nil {
-		regex, err := regexp.Compile(rule.Regexp)
-		if err != nil {
-			log.Printf("rule match err %+v", err)
-		}
-		rule.regex = regex
-	}
 	if !rule.regex.MatchString(line) {
 		return
 	}
-	matches = rule.regex.FindStringSubmatch(line)
-	matches = append(matches[1:])
+	if matches = rule.regex.FindStringSubmatch(line); len(matches) != 0 {
+		return matches[1:]
+	}
 	return
 }

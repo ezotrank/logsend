@@ -17,7 +17,7 @@ var (
 	udp        = flag.Bool("udp", false, "send series over udp")
 	check      = flag.Bool("check", false, "check config.json")
 	debug      = flag.Bool("debug", false, "turn on debug messages")
-	sendBuffer = flag.Int("send-buffer", 25, "send buffer")
+	sendBuffer = flag.Int("send-buffer", 8, "send buffer")
 )
 
 func main() {
