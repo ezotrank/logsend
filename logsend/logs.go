@@ -82,7 +82,7 @@ type Log struct {
 
 func NewLogFile(filename string) (*Log, error) {
 	var err error
-	seekInfo := &tail.SeekInfo{0, 2}
+	seekInfo := &tail.SeekInfo{Offset: 0, Whence: 2}
 	logfile := &Log{}
 	logfile.Tail, err = tail.TailFile(filename, tail.Config{Follow: true, ReOpen: true, Location: seekInfo})
 	return logfile, err
