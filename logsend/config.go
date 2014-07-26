@@ -31,7 +31,6 @@ type Config struct {
 type Group struct {
 	Mask  string  `json:"mask"`
 	Rules []*Rule `json:"rules"`
-	regex *regexp.Regexp
 }
 
 func (self *Group) loadRulesRegexp() {
@@ -40,18 +39,6 @@ func (self *Group) loadRulesRegexp() {
 			log.Panicf("can't load regexp %+v", err)
 		}
 	}
-}
-
-func (group *Group) Match(line string) bool {
-	if group.regex == nil {
-		regex, err := regexp.Compile(group.Mask)
-		if err != nil {
-			log.Printf("group match err %+v", err)
-			return false
-		}
-		group.regex = regex
-	}
-	return group.regex.MatchString(line)
 }
 
 type Rule struct {
@@ -100,11 +87,8 @@ func GetValues(svals []string, rculumns [][]string) (columns []string, points []
 	return
 }
 
-func (rule *Rule) Match(line string) (matches []string) {
-	if !rule.regex.MatchString(line) {
-		return
-	}
-	if matches = rule.regex.FindStringSubmatch(line); len(matches) != 0 {
+func (rule *Rule) Match(line *string) (matches []string) {
+	if matches = rule.regex.FindStringSubmatch(*line); len(matches) != 0 {
 		return matches[1:]
 	}
 	return

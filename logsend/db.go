@@ -5,10 +5,6 @@ import (
 	"net/http"
 )
 
-var (
-	SenderCh = make(chan *influxdb.Series)
-)
-
 func NewDBClient() error {
 	config := &influxdb.ClientConfig{
 		Host:       Conf.DBHost,
@@ -33,7 +29,7 @@ func NewDBClient() error {
 					debug("send series over http")
 					go client.WriteSeries(buf)
 				}
-
+				// clean buffer
 				buf = make([]*influxdb.Series, 0)
 			}
 

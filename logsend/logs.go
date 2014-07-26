@@ -46,7 +46,7 @@ type LogScope struct {
 
 func checkLine(line *string, rules []*Rule) error {
 	for _, rule := range rules {
-		match := rule.Match(*line)
+		match := rule.Match(line)
 		if len(match) == 0 {
 			continue
 		}
