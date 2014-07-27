@@ -30,6 +30,7 @@ func main() {
 	logsend.Conf.DBPassword = *dbpassword
 	logsend.Conf.DBName = *database
 	logsend.Conf.UDP = *udp
+	logsend.Conf.WatchDir = *logDir
 
 	if *check {
 		_, err := logsend.LoadConfig(*config)

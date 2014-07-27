@@ -2,7 +2,9 @@ package logsend
 
 import (
 	"github.com/ActiveState/tail"
+	"github.com/howeyc/fsnotify"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 )
@@ -13,8 +15,18 @@ func WatchFiles(dir, configFile string) {
 		log.Fatalf("can't load config %+v", err)
 	}
 
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		log.Fatalf("can't read config dir: %+v", err)
+	}
+	assignFiles(files, groups)
+	go continueWatch(&dir, groups)
+	select {}
+}
+
+func assignFiles(files []os.FileInfo, groups []*Group) {
 	for _, group := range groups {
-		files, err := getFilesByGroup(&dir, group)
+		files, err := getFilesByGroup(files, group)
 		if err != nil {
 			log.Fatalf("can't get file %+v", err)
 		}
@@ -22,28 +34,63 @@ func WatchFiles(dir, configFile string) {
 			go file.tail(group)
 		}
 	}
-	select {}
 }
 
-func getFilesByGroup(dir *string, group *Group) ([]*File, error) {
-	files := make([]*File, 0)
-	dfiles, err := ioutil.ReadDir(*dir)
+func continueWatch(dir *string, groups []*Group) {
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return files, err
+		log.Fatal(err)
 	}
+
+	done := make(chan bool)
+
+	// Process events
+	go func() {
+		for {
+			select {
+			case ev := <-watcher.Event:
+				if ev.IsCreate() {
+					files := make([]os.FileInfo, 0)
+					file, err := os.Stat(ev.Name)
+					if err != nil {
+						log.Printf("can't get file %+v", err)
+					}
+					files = append(files, file)
+					assignFiles(files, groups)
+				}
+				// debug(ev.IsCreate())
+			case err := <-watcher.Error:
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	err = watcher.Watch(*dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	<-done
+
+	/* ... do stuff ... */
+	watcher.Close()
+}
+
+func getFilesByGroup(allFiles []os.FileInfo, group *Group) ([]*File, error) {
+	files := make([]*File, 0)
 	regex := regexp.MustCompile(*group.Mask)
-	for _, f := range dfiles {
+	for _, f := range allFiles {
 		if !regex.MatchString(f.Name()) {
 			continue
 		}
-		filepath := filepath.Join(*dir, f.Name())
+		filepath := filepath.Join(Conf.WatchDir, f.Name())
 		file, err := NewFile(filepath)
 		if err != nil {
 			return files, err
 		}
 		files = append(files, file)
 	}
-	return files, err
+	return files, nil
 }
 
 func NewFile(fpath string) (*File, error) {

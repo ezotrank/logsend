@@ -19,12 +19,14 @@ var Conf = struct {
 	DBPassword string
 	DBName     string
 	UDP        bool
+	WatchDir   string
 }{
 	"localhost:8086",
 	"root",
 	"root",
 	"test1",
 	false,
+	"",
 }
 
 func debug(msg ...interface{}) {
