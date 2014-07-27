@@ -41,5 +41,5 @@ func main() {
 		os.Exit(0)
 	}
 
-	logsend.WatchLogs(*logDir, *config)
+	logsend.WatchFiles(*logDir, *config)
 }
