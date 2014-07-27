@@ -118,7 +118,7 @@ func checkLine(line *string, rules []*Rule) error {
 		if len(match) == 0 {
 			continue
 		}
-		colums, values, err := GetValues(match, rule.Columns)
+		colums, values, err := getValues(match, rule.Columns)
 		if err != nil {
 			log.Printf("GetValues err %+v", err)
 			return err
@@ -127,4 +127,38 @@ func checkLine(line *string, rules []*Rule) error {
 		SendSeries(series)
 	}
 	return nil
+}
+
+func getValues(match []string, cols [][]string) (columns []string, points []interface{}, err error) {
+	for index, col := range cols {
+		columns = append(columns, col[0])
+		if index <= len(match)-1 {
+			if len(col) == 1 {
+				points = append(points, match[index])
+			} else if len(col) == 2 {
+				ival, err := LeadToType(match[index], col[1])
+				if err != nil {
+					log.Fatalf("GetValues %+v", err)
+				}
+				points = append(points, ival)
+			} else {
+				ival, err := ConvertToPoint(match[index], col[2])
+				if err != nil {
+					log.Fatalf("GetValues %+v", err)
+				}
+				points = append(points, ival)
+			}
+		} else {
+			if len(col) == 1 {
+				points = append(points, "")
+			} else {
+				ival, err := GetValue(col[1])
+				if err != nil {
+					log.Fatalf("GetValues %+v", err)
+				}
+				points = append(points, ival)
+			}
+		}
+	}
+	return
 }
