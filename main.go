@@ -1,9 +1,9 @@
 package main
 
 import (
-	"./logsend"
 	"flag"
 	"fmt"
+	"github.com/ezotrank/logsend/logsend"
 	"os"
 )
 

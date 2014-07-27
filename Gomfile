@@ -1,3 +1,0 @@
-gom 'github.com/ActiveState/tail'
-gom 'github.com/ezotrank/influxdb-go', :branch => 'udp-support'
-gom 'github.com/howeyc/fsnotify'

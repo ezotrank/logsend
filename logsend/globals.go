@@ -1,7 +1,7 @@
 package logsend
 
 import (
-	"github.com/ezotrank/influxdb-go"
+	influxdb "github.com/influxdb/influxdb/client"
 	logpkg "log"
 	"os"
 )

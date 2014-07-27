@@ -4,3 +4,4 @@
 /_builds
 /vendor
 /own_configs
+/.init_go

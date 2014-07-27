@@ -7,18 +7,16 @@ deploy_config := $(DEPLOY_CONFIG)
 all: deps test build
 
 deps:
-	go get github.com/mattn/gom
-	mkdir -p vendor/bin
-	gom install
+	go get
 
 test:
 	gofmt -w ./logsend ./main.go
-	gom test ./logsend
+	go test ./logsend
 	go vet ./logsend
 
 build:
-	gom build -o vendor/bin/logsend ./main.go
-	GOOS=linux gom build -o vendor/bin/logsend_linux ./main.go
+	go build -o $$GOPATH/bin/logsend ./main.go
+	GOOS=linux go build -o $$GOPATH/bin/logsend_linux ./main.go
 
 deploy: build deploy_copy deploy_update_config deploy_restart
 
