@@ -39,13 +39,12 @@ func NewDBClient() error {
 }
 
 func GetSeries(rule *Rule, columns []string, values []interface{}) *influxdb.Series {
-	series := influxdb.Series{}
-	series.Name = *rule.Name
-	series.Columns = columns
-	points := [][]interface{}{values}
-	series.Points = points
-	debug(series)
-	return &series
+	series := &influxdb.Series{
+		Name:    *rule.Name,
+		Columns: columns,
+		Points:  [][]interface{}{values},
+	}
+	return series
 }
 
 func SendSeries(series *influxdb.Series) {

@@ -18,6 +18,7 @@ var (
 	check      = flag.Bool("check", false, "check config.json")
 	debug      = flag.Bool("debug", false, "turn on debug messages")
 	sendBuffer = flag.Int("send-buffer", 8, "send buffer")
+	memprofile = flag.String("memprofile", "", "memory profiler")
 )
 
 func main() {
@@ -31,6 +32,7 @@ func main() {
 	logsend.Conf.DBName = *database
 	logsend.Conf.UDP = *udp
 	logsend.Conf.WatchDir = *logDir
+	logsend.Conf.Memprofile = *memprofile
 
 	if *check {
 		_, err := logsend.LoadConfig(*config)
