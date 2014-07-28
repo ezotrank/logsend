@@ -19,6 +19,10 @@ func WatchFiles(dir, configFile string) {
 	if err != nil {
 		log.Fatalf("can't read config dir: %+v", err)
 	}
+	err = NewDBClient()
+	if err != nil {
+		panic(err)
+	}
 	assignFiles(files, groups)
 	go continueWatch(&dir, groups)
 	select {}

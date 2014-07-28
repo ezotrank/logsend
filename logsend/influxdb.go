@@ -15,6 +15,9 @@ func NewDBClient() error {
 		IsUDP:      Conf.UDP,
 	}
 	client, err := influxdb.NewClient(config)
+	if err != nil {
+		return err
+	}
 	client.DisableCompression()
 	go func() {
 		buf := make([]*influxdb.Series, 0)
