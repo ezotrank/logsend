@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ezotrank/logsend/logsend"
 	"os"
+	"runtime"
 )
 
 var (
@@ -20,10 +21,17 @@ var (
 	sendBuffer   = flag.Int("send-buffer", 8, "send buffer")
 	stopContinue = flag.Bool("stop-continue", false, "watching folder for new files")
 	memprofile   = flag.String("memprofile", "", "memory profiler")
+	maxprocs     = flag.Int("maxprocs", 0, "max count of cpu")
 )
 
 func main() {
 	flag.Parse()
+
+	if *maxprocs <= 0 {
+		*maxprocs = runtime.NumCPU()
+	}
+	runtime.GOMAXPROCS(*maxprocs)
+	fmt.Printf("set GOMAXPROCS to %v\n", *maxprocs)
 
 	logsend.Conf.SendBuffer = *sendBuffer
 	logsend.Conf.Debug = *debug
