@@ -130,6 +130,7 @@ func checkLine(line *string, rules []*Rule) error {
 			return err
 		}
 		series := GetSeries(rule, colums, values)
+		debug(*series)
 		SendSeries(series)
 	}
 	return nil
