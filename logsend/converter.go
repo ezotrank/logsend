@@ -21,12 +21,6 @@ func getHostname() (interface{}, error) {
 }
 
 func ConvertToPoint(val, convert string) (result interface{}, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("Recovered in f", r)
-			log.Printf("can't convert %+v and %+v", val, convert)
-		}
-	}()
 	switch convert {
 	case "DurationToMillisecond":
 		result, err = convertDurationToMillisecond(val)

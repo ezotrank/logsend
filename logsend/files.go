@@ -24,7 +24,9 @@ func WatchFiles(dir, configFile string) {
 		panic(err)
 	}
 	assignFiles(files, groups)
-	go continueWatch(&dir, groups)
+	if Conf.ContinueWatch {
+		go continueWatch(&dir, groups)
+	}
 	select {}
 }
 

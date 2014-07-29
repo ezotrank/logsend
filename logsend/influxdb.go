@@ -23,7 +23,7 @@ func NewDBClient() error {
 		buf := make([]*influxdb.Series, 0)
 		for series := range SenderCh {
 			buf = append(buf, series)
-			if len(buf) >= SendBuffer {
+			if len(buf) >= Conf.SendBuffer {
 				debug("buf: ", buf)
 				if Conf.UDP {
 					debug("send series over udp")

@@ -8,34 +8,38 @@ import (
 )
 
 type Configuration struct {
-	DBHost     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	UDP        bool
-	WatchDir   string
-	Memprofile string
-	memprofile *os.File
-	Cpuprofile string
-	cpuprofile *os.File
+	DBHost        string
+	DBUser        string
+	DBPassword    string
+	DBName        string
+	UDP           bool
+	WatchDir      string
+	ContinueWatch bool
+	SendBuffer    int
+	Debug         bool
+	Memprofile    string
+	memprofile    *os.File
+	Cpuprofile    string
+	cpuprofile    *os.File
 }
 
 var (
-	log        = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
-	Debug      = true
-	SendBuffer = 50
-	SenderCh   = make(chan *influxdb.Series)
+	log      = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
+	SenderCh = make(chan *influxdb.Series)
 )
 
 var Conf = &Configuration{
-	DBHost:     "localhost:8086",
-	DBUser:     "root",
-	DBPassword: "root",
-	DBName:     "test1",
-	UDP:        false,
-	WatchDir:   "",
-	Memprofile: "",
-	Cpuprofile: "",
+	DBHost:        "localhost:8086",
+	DBUser:        "root",
+	DBPassword:    "root",
+	DBName:        "test1",
+	UDP:           false,
+	WatchDir:      "",
+	ContinueWatch: true,
+	Debug:         false,
+	Memprofile:    "",
+	Cpuprofile:    "",
+	SendBuffer:    8,
 }
 
 func mempprof() {
@@ -46,7 +50,7 @@ func mempprof() {
 }
 
 func debug(msg ...interface{}) {
-	if !Debug {
+	if !Conf.Debug {
 		return
 	}
 	log.Printf("debug: %+v", msg)

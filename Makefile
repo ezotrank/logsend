@@ -23,7 +23,7 @@ deploy: build deploy_copy deploy_update_config deploy_restart
 deploy_copy:
 	for host in ${deploy_target}; do \
 		ssh ${deploy_user}@$$host "mkdir -p ~/logsend" ; \
-		scp vendor/bin/logsend_linux ${deploy_user}@$$host:"~/logsend/logsend_linux.NEW" ; \
+		scp $$GOPATH/bin/logsend_linux ${deploy_user}@$$host:"~/logsend/logsend_linux.NEW" ; \
 		ssh ${deploy_user}@$$host "cd ~/logsend && mv logsend_linux.NEW logsend_linux" ; \
 	done
 
