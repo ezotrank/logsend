@@ -4,15 +4,17 @@ deploy_user := $(DEPLOY_USER)
 deploy_target := $(DEPLOY_TO)
 deploy_config := $(DEPLOY_CONFIG)
 
-all: deps test build
+all: deps format test build
 
 deps:
 	go get
 
 test:
-	gofmt -w ./logsend ./main.go
 	go test ./logsend
 	go vet ./logsend
+
+format:
+	gofmt -w ./logsend ./main.go
 
 build:
 	go build -o $$GOPATH/bin/logsend ./main.go
