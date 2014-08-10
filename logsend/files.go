@@ -139,19 +139,18 @@ func checkLine(line *string, rules []*Rule) error {
 func getValues(match []string, cols [][]string) (columns []string, points []interface{}, err error) {
 	for index, col := range cols {
 		columns = append(columns, col[0])
+		var ival interface{}
 		if index <= len(match)-1 {
 			if len(col) == 1 {
 				points = append(points, match[index])
 			} else if len(col) == 2 {
-				ival, err := LeadToType(match[index], col[1])
-				if err != nil {
-					log.Fatalf("GetValues %+v", err)
+				if ival, err = LeadToType(match[index], col[1]); err != nil {
+					return
 				}
 				points = append(points, ival)
 			} else {
-				ival, err := ConvertToPoint(match[index], col[2])
-				if err != nil {
-					log.Fatalf("GetValues %+v", err)
+				if ival, err = ConvertToPoint(match[index], col[2]); err != nil {
+					return
 				}
 				points = append(points, ival)
 			}
@@ -159,9 +158,8 @@ func getValues(match []string, cols [][]string) (columns []string, points []inte
 			if len(col) == 1 {
 				points = append(points, "")
 			} else {
-				ival, err := GetValue(col[1])
-				if err != nil {
-					log.Fatalf("GetValues %+v", err)
+				if ival, err = GetValue(col[1]); err != nil {
+					return
 				}
 				points = append(points, ival)
 			}
