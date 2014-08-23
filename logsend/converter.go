@@ -3,6 +3,7 @@ package logsend
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -45,6 +46,23 @@ func LeadToType(val, valType string) (result interface{}, err error) {
 		result, err = strconv.ParseFloat(val, 64)
 	default:
 		result = val
+	}
+	return
+}
+
+func toFloat(val string) (float64, error) {
+	return strconv.ParseFloat(val, 64)
+}
+
+func prepareValue(source, data string) (key string, val interface{}, err error) {
+	tSource := strings.Split(source, "_")
+	key = strings.Join(tSource[:len(tSource)-1], "_")
+	keyType := tSource[len(tSource)-1]
+	switch keyType {
+	default:
+		val = data
+	case "FLOAT":
+		val, err = toFloat(data)
 	}
 	return
 }

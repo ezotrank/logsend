@@ -14,14 +14,9 @@ func WatchFiles(dir, configFile string) {
 	if err != nil {
 		log.Fatalf("can't load config %+v", err)
 	}
-
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		log.Fatalf("can't read config dir: %+v", err)
-	}
-	err = NewDBClient()
-	if err != nil {
-		panic(err)
 	}
 	assignFiles(files, groups)
 	if Conf.ContinueWatch {
@@ -121,17 +116,18 @@ func (self *File) tail(group *Group) {
 func checkLine(line *string, rules []*Rule) error {
 	for _, rule := range rules {
 		match := rule.Match(line)
-		if len(match) == 0 {
+		if match == nil {
 			continue
 		}
-		colums, values, err := getValues(match, rule.Columns)
-		if err != nil {
-			log.Printf("GetValues err %+v", err)
-			return err
-		}
-		series := GetSeries(rule, colums, values)
-		debug(*series)
-		SendSeries(series)
+		rule.send(match)
+		// colums, values, err := getValues(match, rule.Columns)
+		// 		if err != nil {
+		// 			log.Printf("GetValues err %+v", err)
+		// 			return err
+		// 		}
+		// 		series := GetSeries(rule, colums, values)
+		// 		debug(*series)
+		// 		SendSeries(series)
 	}
 	return nil
 }

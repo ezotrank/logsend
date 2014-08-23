@@ -5,7 +5,11 @@ import (
 	"net/http"
 )
 
-func NewDBClient() error {
+var (
+	influxdbCh = make(chan *influxdb.Series)
+)
+
+func init() {
 	config := &influxdb.ClientConfig{
 		Host:       Conf.DBHost,
 		Username:   Conf.DBUser,
@@ -16,41 +20,69 @@ func NewDBClient() error {
 	}
 	client, err := influxdb.NewClient(config)
 	if err != nil {
-		return err
+		log.Fatalln(err)
 	}
 	client.DisableCompression()
+
 	go func() {
 		buf := make([]*influxdb.Series, 0)
-		for series := range SenderCh {
+		for series := range influxdbCh {
+			debug("go func", *series)
 			buf = append(buf, series)
 			if len(buf) >= Conf.SendBuffer {
-				debug("buf: ", buf)
 				if Conf.UDP {
-					debug("send series over udp")
 					go client.WriteSeriesOverUDP(buf)
 				} else {
-					debug("send series over http")
 					go client.WriteSeries(buf)
 				}
 				// clean buffer
 				buf = make([]*influxdb.Series, 0)
 			}
-
 		}
 	}()
-	return err
 }
 
-func GetSeries(rule *Rule, columns []string, values []interface{}) *influxdb.Series {
+type InfluxdbSender struct {
+	name string
+}
+
+func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
+	self.name = rawConfig.(map[string]interface{})["name"].(string)
+	return nil
+}
+
+func (self *InfluxdbSender) Name() string {
+	return "InfluxdbSender"
+}
+
+func (self *InfluxdbSender) Send(data interface{}) {
 	series := &influxdb.Series{
-		Name:    *rule.Name,
-		Columns: columns,
-		Points:  [][]interface{}{values},
+		Name: self.name,
 	}
-	return series
+	switch data.(type) {
+	case map[string]interface{}:
+		columns := make([]string, 0)
+		points := make([]interface{}, 0)
+		for key, value := range data.(map[string]interface{}) {
+			columns = append(columns, key)
+			points = append(points, value)
+		}
+		series.Columns = columns
+		series.Points = [][]interface{}{points}
+	}
+	influxdbCh <- series
 }
 
-func SendSeries(series *influxdb.Series) {
-	SenderCh <- series
-	return
-}
+// func getSeries(rule *Rule, columns []string, values []interface{}) *influxdb.Series {
+// 	series := &influxdb.Series{
+// 		Name:    *rule.Name,
+// 		Columns: columns,
+// 		Points:  [][]interface{}{values},
+// 	}
+// 	return series
+// }
+
+// func SendSeries(series *influxdb.Series) {
+// 	influxCh <- series
+// 	return
+// }

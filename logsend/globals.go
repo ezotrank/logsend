@@ -1,7 +1,6 @@
 package logsend
 
 import (
-	influxdb "github.com/influxdb/influxdb/client"
 	logpkg "log"
 	"os"
 	"runtime/pprof"
@@ -24,8 +23,8 @@ type Configuration struct {
 }
 
 var (
-	log      = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
-	SenderCh = make(chan *influxdb.Series)
+	log     = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
+	senders = []Sender{}
 )
 
 var Conf = &Configuration{

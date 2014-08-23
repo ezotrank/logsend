@@ -17,8 +17,9 @@ func LoadConfig(fileName string) ([]*Group, error) {
 	if err := json.Unmarshal(brules, &groups); err != nil {
 		return nil, err
 	}
+
 	for _, group := range groups {
-		if err := group.loadRulesRegexp(); err != nil {
+		if err := group.loadRules(); err != nil {
 			return nil, err
 		}
 	}
