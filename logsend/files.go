@@ -120,46 +120,6 @@ func checkLine(line *string, rules []*Rule) error {
 			continue
 		}
 		rule.send(match)
-		// colums, values, err := getValues(match, rule.Columns)
-		// 		if err != nil {
-		// 			log.Printf("GetValues err %+v", err)
-		// 			return err
-		// 		}
-		// 		series := GetSeries(rule, colums, values)
-		// 		debug(*series)
-		// 		SendSeries(series)
 	}
 	return nil
-}
-
-func getValues(match []string, cols [][]string) (columns []string, points []interface{}, err error) {
-	for index, col := range cols {
-		columns = append(columns, col[0])
-		var ival interface{}
-		if index <= len(match)-1 {
-			if len(col) == 1 {
-				points = append(points, match[index])
-			} else if len(col) == 2 {
-				if ival, err = LeadToType(match[index], col[1]); err != nil {
-					return
-				}
-				points = append(points, ival)
-			} else {
-				if ival, err = ConvertToPoint(match[index], col[2]); err != nil {
-					return
-				}
-				points = append(points, ival)
-			}
-		} else {
-			if len(col) == 1 {
-				points = append(points, "")
-			} else {
-				if ival, err = GetValue(col[1]); err != nil {
-					return
-				}
-				points = append(points, ival)
-			}
-		}
-	}
-	return
 }

@@ -19,6 +19,12 @@ func (self *Group) loadRules() (err error) {
 			influxsender.SetConfig(rule.Influxdb)
 			rule.senders = append(rule.senders, influxsender)
 		}
+
+		if rule.Statsd != nil {
+			statsdsender := &StatsdSender{}
+			statsdsender.SetConfig(rule.Statsd)
+			rule.senders = append(rule.senders, statsdsender)
+		}
 	}
 	return
 }
@@ -28,6 +34,7 @@ type Rule struct {
 	Regexp   *string `json:"regexp"`
 	regexp   *regexp.Regexp
 	Influxdb interface{} `json:"influxdb"`
+	Statsd   interface{} `json:"statsd"`
 	senders  []Sender
 }
 
