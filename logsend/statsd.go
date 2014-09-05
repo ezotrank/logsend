@@ -72,8 +72,8 @@ func interfaceToInt64(i interface{}) (val int64, err error) {
 }
 
 func replaceKey(str string) string {
-	hostname, _ := getHostname()
-	return strings.Replace(str, `%HOST%`, hostname.(string), 1)
+	// hostname, _ := getHostname()
+	return strings.Replace(str, `%HOST%`, "example.com", 1)
 }
 
 func (self *StatsdSender) Send(data interface{}) {
