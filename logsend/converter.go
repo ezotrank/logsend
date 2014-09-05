@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"os"
+	"time"
 )
 
 func getHostname() (interface{}, error) {
@@ -28,6 +29,15 @@ func toInt(val string) (int64, error) {
 	return strconv.ParseInt(val, 0, 64)
 }
 
+func durationToMillisecond(val *string) (result interface{}, err error) {
+    duration, err := time.ParseDuration(*val)
+    if err != nil {
+            return
+    }
+    result = duration.Nanoseconds() / 1000 / 1000
+    return
+}
+
 func prepareValue(source, data string) (key string, val interface{}, err error) {
 	tSource := strings.Split(source, "_")
 	key = strings.Join(tSource[:len(tSource)-1], "_")
@@ -39,6 +49,8 @@ func prepareValue(source, data string) (key string, val interface{}, err error) 
 		val, err = toFloat(data)
 	case "INT":
 		val, err = toInt(data)
+	case "DurationToMillisecond":
+		val, err = durationToMillisecond(&data)
 	}
 	return
 }
