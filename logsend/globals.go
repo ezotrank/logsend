@@ -7,14 +7,8 @@ import (
 )
 
 type Configuration struct {
-	DBHost        string
-	DBUser        string
-	DBPassword    string
-	DBName        string
-	UDP           bool
 	WatchDir      string
 	ContinueWatch bool
-	SendBuffer    int
 	Debug         bool
 	Memprofile    string
 	memprofile    *os.File
@@ -28,17 +22,11 @@ var (
 )
 
 var Conf = &Configuration{
-	DBHost:        "localhost:8086",
-	DBUser:        "root",
-	DBPassword:    "root",
-	DBName:        "test1",
-	UDP:           false,
 	WatchDir:      "",
 	ContinueWatch: true,
 	Debug:         false,
 	Memprofile:    "",
 	Cpuprofile:    "",
-	SendBuffer:    8,
 }
 
 func mempprof() {

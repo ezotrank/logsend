@@ -5,18 +5,27 @@ import (
 	"net/http"
 )
 
+type InfluxDBConfig struct {
+	Host       string
+	User       string
+	Password   string
+	Database   string
+	Udp        bool
+	SendBuffer int
+}
+
 var (
-	influxdbCh = make(chan *influxdb.Series)
+	influxdbCh = make(chan *influxdb.Series, 0)
 )
 
-func init() {
+func InitInfluxdb(ch chan *influxdb.Series, conf *InfluxDBConfig) error {
 	config := &influxdb.ClientConfig{
-		Host:       Conf.DBHost,
-		Username:   Conf.DBUser,
-		Password:   Conf.DBPassword,
-		Database:   Conf.DBName,
+		Host:       conf.Host,
+		Username:   conf.User,
+		Password:   conf.Password,
+		Database:   conf.Database,
+		IsUDP:      conf.Udp,
 		HttpClient: http.DefaultClient,
-		IsUDP:      Conf.UDP,
 	}
 	client, err := influxdb.NewClient(config)
 	if err != nil {
@@ -25,12 +34,13 @@ func init() {
 	client.DisableCompression()
 
 	go func() {
+		log.Println("Influxdb queue is starts")
 		buf := make([]*influxdb.Series, 0)
-		for series := range influxdbCh {
+		for series := range ch {
 			debug("go func", *series)
 			buf = append(buf, series)
-			if len(buf) >= Conf.SendBuffer {
-				if Conf.UDP {
+			if len(buf) >= conf.SendBuffer {
+				if conf.Udp {
 					go client.WriteSeriesOverUDP(buf)
 				} else {
 					go client.WriteSeries(buf)
@@ -40,6 +50,7 @@ func init() {
 			}
 		}
 	}()
+	return nil
 }
 
 type InfluxdbSender struct {
@@ -72,17 +83,3 @@ func (self *InfluxdbSender) Send(data interface{}) {
 	}
 	influxdbCh <- series
 }
-
-// func getSeries(rule *Rule, columns []string, values []interface{}) *influxdb.Series {
-// 	series := &influxdb.Series{
-// 		Name:    *rule.Name,
-// 		Columns: columns,
-// 		Points:  [][]interface{}{values},
-// 	}
-// 	return series
-// }
-
-// func SendSeries(series *influxdb.Series) {
-// 	influxCh <- series
-// 	return
-// }

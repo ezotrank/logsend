@@ -6,22 +6,31 @@ import (
 	"os"
 )
 
+type ConfigFile struct {
+	Influxdb *InfluxDBConfig
+	Groups   []*Group
+}
+
 func LoadConfig(fileName string) ([]*Group, error) {
-	groups := make([]*Group, 0)
+	configFile := &ConfigFile{}
 	file, err := os.OpenFile(fileName, os.O_RDWR, 0644)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	brules, _ := ioutil.ReadAll(file)
-	if err := json.Unmarshal(brules, &groups); err != nil {
+	rawConfig, _ := ioutil.ReadAll(file)
+	if err := json.Unmarshal(rawConfig, configFile); err != nil {
 		return nil, err
 	}
 
-	for _, group := range groups {
+	if configFile.Influxdb != nil {
+		InitInfluxdb(influxdbCh, configFile.Influxdb)
+	}
+
+	for _, group := range configFile.Groups {
 		if err := group.loadRules(); err != nil {
 			return nil, err
 		}
 	}
-	return groups, nil
+	return configFile.Groups, nil
 }
