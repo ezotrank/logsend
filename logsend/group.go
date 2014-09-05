@@ -43,14 +43,6 @@ func (self *Rule) loadRegexp() (err error) {
 	return
 }
 
-// func(self *Rule) send()
-// }
-// func (self *Rule) send() (err error) {
-// 	for _,sender := self.senders {
-// 		sender.send()
-// 	}
-// }
-
 func (rule *Rule) Match(line *string) interface{} {
 	matches := rule.regexp.FindStringSubmatch(*line)
 
