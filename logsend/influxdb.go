@@ -55,10 +55,18 @@ func InitInfluxdb(ch chan *influxdb.Series, conf *InfluxDBConfig) error {
 
 type InfluxdbSender struct {
 	name string
+	extraFields [][]*string
 }
 
 func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
 	self.name = rawConfig.(map[string]interface{})["name"].(string)
+	if extraFields, ok := rawConfig.(map[string]interface{})["extra_fields"]; ok {
+		for _, pair := range extraFields.([]interface{}) {
+			field := pair.([]interface{})[0].(string)
+			value := pair.([]interface{})[1].(string)
+			self.extraFields = append(self.extraFields, []*string{&field, &value})
+		}
+	}
 	return nil
 }
 
@@ -77,6 +85,12 @@ func (self *InfluxdbSender) Send(data interface{}) {
 		for key, value := range data.(map[string]interface{}) {
 			columns = append(columns, key)
 			points = append(points, value)
+		}
+		for _, extraField := range self.extraFields {
+			if val, err := extendValue(extraField[1]); err == nil {
+				columns = append(columns, *extraField[0])
+				points = append(points, val)
+			}
 		}
 		series.Columns = columns
 		series.Points = [][]interface{}{points}
