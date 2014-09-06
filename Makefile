@@ -1,3 +1,6 @@
+# Examples:
+# DEPLOY_USER=user DEPLOY_CONFIG=some_config DEPLOY_TO="host1 host2" make deploy
+
 .PHONY: all nuke build deploy deps test
 
 deploy_user := $(DEPLOY_USER)
@@ -26,7 +29,7 @@ deploy_copy:
 	for host in ${deploy_target}; do \
 		ssh ${deploy_user}@$$host "mkdir -p ~/logsend" ; \
 		scp $$GOPATH/bin/logsend_linux ${deploy_user}@$$host:"~/logsend/logsend_linux.NEW" ; \
-		ssh ${deploy_user}@$$host "cd ~/logsend && mv logsend_linux.NEW logsend_linux" ; \
+		ssh ${deploy_user}@$$host "cd ~/logsend && mv logsend_linux.NEW logsend" ; \
 	done
 
 
