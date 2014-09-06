@@ -29,12 +29,12 @@ func InitInfluxdb(ch chan *influxdb.Series, conf *InfluxDBConfig) error {
 	}
 	client, err := influxdb.NewClient(config)
 	if err != nil {
-		log.Fatalln(err)
+		Conf.Logger.Fatalln(err)
 	}
 	client.DisableCompression()
 
 	go func() {
-		log.Println("Influxdb queue is starts")
+		Conf.Logger.Println("Influxdb queue is starts")
 		buf := make([]*influxdb.Series, 0)
 		for series := range ch {
 			debug("go func", *series)
@@ -54,7 +54,7 @@ func InitInfluxdb(ch chan *influxdb.Series, conf *InfluxDBConfig) error {
 }
 
 type InfluxdbSender struct {
-	name string
+	name        string
 	extraFields [][]*string
 }
 

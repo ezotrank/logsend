@@ -59,7 +59,7 @@ func (rule *Rule) Match(line *string) interface{} {
 	for i, value := range matches[1:] {
 		key, value, err := prepareValue(rule.regexp.SubexpNames()[i+1], value)
 		if err != nil {
-			log.Printf("can't prepareValue with %+v and %+v have err %+v", rule.regexp.SubexpNames()[i+1], value, err)
+			Conf.Logger.Printf("can't prepareValue with %+v and %+v have err %+v", rule.regexp.SubexpNames()[i+1], value, err)
 			return nil
 		}
 		out[key] = value

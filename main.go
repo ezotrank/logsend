@@ -4,22 +4,32 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ezotrank/logsend/logsend"
+	logpkg "log"
 	"os"
 	"runtime"
 )
 
 var (
-	logDir       = flag.String("log-dir", "./tmp", "log directories")
+	watchDir     = flag.String("watch-dir", "./tmp", "log directories")
 	config       = flag.String("config", "config.json", "path to config.json file")
 	check        = flag.Bool("check", false, "check config.json")
 	debug        = flag.Bool("debug", false, "turn on debug messages")
 	stopContinue = flag.Bool("stop-continue", false, "watching folder for new files")
+	logFile      = flag.String("log", "", "log file")
 	memprofile   = flag.String("memprofile", "", "memory profiler")
 	maxprocs     = flag.Int("maxprocs", 0, "max count of cpu")
 )
 
 func main() {
 	flag.Parse()
+
+	if *logFile != "" {
+		file, err := os.OpenFile(*logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			fmt.Errorf("Failed to open log file: %+v\n", err)
+		}
+		logsend.Conf.Logger = logpkg.New(file, "", logpkg.Ldate|logpkg.Ltime|logpkg.Lshortfile)
+	}
 
 	if *maxprocs <= 0 {
 		*maxprocs = runtime.NumCPU()
@@ -29,7 +39,7 @@ func main() {
 
 	logsend.Conf.Debug = *debug
 	logsend.Conf.ContinueWatch = !*stopContinue
-	logsend.Conf.WatchDir = *logDir
+	logsend.Conf.WatchDir = *watchDir
 	logsend.Conf.Memprofile = *memprofile
 
 	if *check {
@@ -42,5 +52,5 @@ func main() {
 		os.Exit(0)
 	}
 
-	logsend.WatchFiles(*logDir, *config)
+	logsend.WatchFiles(*watchDir, *config)
 }

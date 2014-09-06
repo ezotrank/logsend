@@ -1,9 +1,9 @@
 package logsend
 
 import (
+	"os"
 	"strconv"
 	"strings"
-	"os"
 	"time"
 )
 
@@ -11,7 +11,7 @@ func getHostname() (interface{}, error) {
 	return os.Hostname()
 }
 
-func extendValue(name *string) (val interface{}, err error ) {
+func extendValue(name *string) (val interface{}, err error) {
 	switch *name {
 	default:
 		val, err = *name, nil
@@ -30,12 +30,12 @@ func toInt(val string) (int64, error) {
 }
 
 func durationToMillisecond(val *string) (result interface{}, err error) {
-    duration, err := time.ParseDuration(*val)
-    if err != nil {
-            return
-    }
-    result = duration.Nanoseconds() / 1000 / 1000
-    return
+	duration, err := time.ParseDuration(*val)
+	if err != nil {
+		return
+	}
+	result = duration.Nanoseconds() / 1000 / 1000
+	return
 }
 
 func prepareValue(source, data string) (key string, val interface{}, err error) {

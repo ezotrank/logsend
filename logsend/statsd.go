@@ -86,7 +86,7 @@ func (self *StatsdSender) Send(data interface{}) {
 		if val, ok := data.(map[string]interface{})[values[1]]; ok {
 			intval, err := interfaceToInt64(val)
 			if err != nil {
-				log.Fatalln(err)
+				Conf.Logger.Fatalln(err)
 			}
 			key := replaceKey(values[0])
 			statsdCh <- map[string]map[string]int64{"timing": {key: intval}}

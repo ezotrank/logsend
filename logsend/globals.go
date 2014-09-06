@@ -11,15 +11,11 @@ type Configuration struct {
 	ContinueWatch bool
 	Debug         bool
 	Memprofile    string
+	Logger        *logpkg.Logger
 	memprofile    *os.File
 	Cpuprofile    string
 	cpuprofile    *os.File
 }
-
-var (
-	log     = logpkg.New(os.Stderr, "", logpkg.Lmicroseconds)
-	senders = []Sender{}
-)
 
 var Conf = &Configuration{
 	WatchDir:      "",
@@ -27,7 +23,12 @@ var Conf = &Configuration{
 	Debug:         false,
 	Memprofile:    "",
 	Cpuprofile:    "",
+	Logger:        logpkg.New(os.Stderr, "", logpkg.Ldate|logpkg.Ltime|logpkg.Lshortfile),
 }
+
+var (
+	senders = []Sender{}
+)
 
 func mempprof() {
 	if Conf.memprofile == nil {
@@ -40,5 +41,5 @@ func debug(msg ...interface{}) {
 	if !Conf.Debug {
 		return
 	}
-	log.Printf("debug: %+v", msg)
+	Conf.Logger.Printf("debug: %+v", msg)
 }

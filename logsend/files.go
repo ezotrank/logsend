@@ -12,11 +12,11 @@ import (
 func WatchFiles(dir, configFile string) {
 	groups, err := LoadConfig(configFile)
 	if err != nil {
-		log.Fatalf("can't load config %+v", err)
+		Conf.Logger.Fatalf("can't load config %+v", err)
 	}
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		log.Fatalf("can't read config dir: %+v", err)
+		Conf.Logger.Fatalf("can't read config dir: %+v", err)
 	}
 	assignFiles(files, groups)
 	if Conf.ContinueWatch {
@@ -29,7 +29,7 @@ func assignFiles(files []os.FileInfo, groups []*Group) {
 	for _, group := range groups {
 		files, err := getFilesByGroup(files, group)
 		if err != nil {
-			log.Fatalf("can't get file %+v", err)
+			Conf.Logger.Fatalf("can't get file %+v", err)
 		}
 		for _, file := range files {
 			go file.tail(group)
@@ -40,7 +40,7 @@ func assignFiles(files []os.FileInfo, groups []*Group) {
 func continueWatch(dir *string, groups []*Group) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		Conf.Logger.Fatal(err)
 	}
 
 	done := make(chan bool)
@@ -54,21 +54,21 @@ func continueWatch(dir *string, groups []*Group) {
 					files := make([]os.FileInfo, 0)
 					file, err := os.Stat(ev.Name)
 					if err != nil {
-						log.Printf("can't get file %+v", err)
+						Conf.Logger.Printf("can't get file %+v", err)
 					}
 					files = append(files, file)
 					assignFiles(files, groups)
 				}
 				// debug(ev.IsCreate())
 			case err := <-watcher.Error:
-				log.Println("error:", err)
+				Conf.Logger.Println("error:", err)
 			}
 		}
 	}()
 
 	err = watcher.Watch(*dir)
 	if err != nil {
-		log.Fatal(err)
+		Conf.Logger.Fatal(err)
 	}
 
 	<-done
@@ -107,7 +107,7 @@ type File struct {
 }
 
 func (self *File) tail(group *Group) {
-	log.Printf("start tailing %+v", self.Tail.Filename)
+	Conf.Logger.Printf("start tailing %+v", self.Tail.Filename)
 	for line := range self.Tail.Lines {
 		go checkLine(&line.Text, group.Rules)
 	}
