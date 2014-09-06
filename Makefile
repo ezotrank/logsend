@@ -27,15 +27,23 @@ deploy: build deploy_copy deploy_update_config deploy_restart
 
 deploy_copy:
 	for host in ${deploy_target}; do \
+	  gzip -9 $$GOPATH/bin/logsend_linux ; \
 		ssh ${deploy_user}@$$host "mkdir -p ~/logsend" ; \
-		scp $$GOPATH/bin/logsend_linux ${deploy_user}@$$host:"~/logsend/logsend_linux.NEW" ; \
-		ssh ${deploy_user}@$$host "cd ~/logsend && mv logsend_linux.NEW logsend" ; \
+		scp $$GOPATH/bin/logsend_linux.gz ${deploy_user}@$$host:"~/logsend/logsend.gz" ; \
+		ssh ${deploy_user}@$$host "cd ~/logsend && gunzip -f logsend.gz" ; \
+		rm -f $$GOPATH/bin/logsend_linux.gz ; \
 	done
 
 
 deploy_update_config:
 	for host in ${deploy_target}; do \
 		scp ./own_configs/${deploy_config}_config.json ${deploy_user}@$$host:"~/logsend/config.json" ; \
+	done
+
+deploy_update_monit:
+	for host in ${deploy_target}; do \
+		scp ./own_configs/${deploy_config}_monit.conf ${deploy_user}@$$host:"/etc/monit.d/logsend.conf" ; \
+		ssh ${deploy_user}@$$host "sudo /etc/init.d/monit restart" ; \
 	done
 
 
