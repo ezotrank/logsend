@@ -16,6 +16,7 @@ var (
 	debug        = flag.Bool("debug", false, "turn on debug messages")
 	stopContinue = flag.Bool("stop-continue", false, "watching folder for new files")
 	logFile      = flag.String("log", "", "log file")
+	dryRun       = flag.Bool("dry-run", false, "not send data")
 	memprofile   = flag.String("memprofile", "", "memory profiler")
 	maxprocs     = flag.Int("maxprocs", 0, "max count of cpu")
 )
@@ -41,6 +42,7 @@ func main() {
 	logsend.Conf.ContinueWatch = !*stopContinue
 	logsend.Conf.WatchDir = *watchDir
 	logsend.Conf.Memprofile = *memprofile
+	logsend.Conf.DryRun = *dryRun
 
 	if *check {
 		_, err := logsend.LoadConfig(*config)

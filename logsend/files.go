@@ -119,7 +119,9 @@ func checkLine(line *string, rules []*Rule) error {
 		if match == nil {
 			continue
 		}
-		rule.send(match)
+		if !Conf.DryRun {
+			rule.send(match)
+		}
 	}
 	return nil
 }

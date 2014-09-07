@@ -12,6 +12,7 @@ type Configuration struct {
 	Debug         bool
 	Memprofile    string
 	Logger        *logpkg.Logger
+	DryRun        bool
 	memprofile    *os.File
 	Cpuprofile    string
 	cpuprofile    *os.File
@@ -24,6 +25,7 @@ var Conf = &Configuration{
 	Memprofile:    "",
 	Cpuprofile:    "",
 	Logger:        logpkg.New(os.Stderr, "", logpkg.Ldate|logpkg.Ltime|logpkg.Lshortfile),
+	DryRun:        false,
 }
 
 var (
