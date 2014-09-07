@@ -26,8 +26,8 @@ build:
 deploy: build deploy_copy deploy_update_config deploy_restart
 
 deploy_copy:
+	gzip -9 -k -f $$GOPATH/bin/logsend_linux
 	for host in ${deploy_target}; do \
-	  gzip -9 $$GOPATH/bin/logsend_linux ; \
 		ssh ${deploy_user}@$$host "mkdir -p ~/logsend" ; \
 		scp $$GOPATH/bin/logsend_linux.gz ${deploy_user}@$$host:"~/logsend/logsend.gz" ; \
 		ssh ${deploy_user}@$$host "cd ~/logsend && gunzip -f logsend.gz" ; \
