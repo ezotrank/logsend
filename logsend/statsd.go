@@ -2,24 +2,32 @@ package logsend
 
 import (
 	"github.com/quipo/statsd"
-	"strings"
+	// "strings"
 	"time"
 )
 
+type StatsdConfig struct {
+	Host     string
+	Prefix   string
+	Interval string
+}
+
 var (
-	statsdCh = make(chan map[string]map[string]int64)
+	statsdCh = make(chan *map[string]map[string]int64, 0)
 )
 
-func init() {
+func InitStatsd(ch chan *map[string]map[string]int64, conf *StatsdConfig) error {
 	go func() {
-		prefix := "test."
-		statsdclient := statsd.NewStatsdClient("10.70.120.213:8125", prefix)
+		statsdclient := statsd.NewStatsdClient(conf.Host, conf.Prefix)
 		statsdclient.CreateSocket()
-		interval, _ := time.ParseDuration("1s")
+		interval, err := time.ParseDuration(conf.Interval)
+		if err != nil {
+			Conf.Logger.Fatalf("can't parse interval %+v", err)
+		}
 		stats := statsd.NewStatsdBuffer(interval, statsdclient)
 		defer stats.Close()
 		for data := range statsdCh {
-			for op, values := range data {
+			for op, values := range *data {
 				for key, val := range values {
 					switch op {
 					case "increment":
@@ -28,18 +36,22 @@ func init() {
 					case "timing":
 						debug("send timing", key, val)
 						stats.Timing(key, val)
+					case "gauge":
+						debug("send gauge", key, val)
+						stats.Gauge(key, val)
 					}
 				}
 
 			}
 		}
 	}()
+	return nil
 }
 
 type StatsdSender struct {
 	timing    [][]string
+	gauge     [][]string
 	increment []string
-	gauge     []string
 }
 
 func (self *StatsdSender) SetConfig(rawConfig interface{}) error {
@@ -56,6 +68,13 @@ func (self *StatsdSender) SetConfig(rawConfig interface{}) error {
 		}
 		debug(self.increment)
 	}
+
+	if val, ok := rawConfig.(map[string]interface{})["gauge"]; ok {
+		for _, vals := range val.([]interface{}) {
+			self.gauge = append(self.gauge, []string{vals.([]interface{})[0].(string), vals.([]interface{})[1].(string)})
+		}
+		debug(self.gauge)
+	}
 	return nil
 }
 
@@ -65,6 +84,8 @@ func (self *StatsdSender) Name() string {
 
 func interfaceToInt64(i interface{}) (val int64, err error) {
 	switch i.(type) {
+	default:
+		val = i.(int64)
 	case float64:
 		val = int64(i.(float64))
 	}
@@ -73,23 +94,41 @@ func interfaceToInt64(i interface{}) (val int64, err error) {
 
 func replaceKey(str string) string {
 	// hostname, _ := getHostname()
-	return strings.Replace(str, `%HOST%`, "example.com", 1)
+	// return strings.Replace(str, `%HOST%`, "example.com", 1)
+	return str
 }
 
 func (self *StatsdSender) Send(data interface{}) {
 	for _, name := range self.increment {
 		name = replaceKey(name)
-		statsdCh <- map[string]map[string]int64{"increment": {name: 1}}
+		statsdCh <- &map[string]map[string]int64{"increment": {name: 1}}
 	}
 
 	for _, values := range self.timing {
 		if val, ok := data.(map[string]interface{})[values[1]]; ok {
 			intval, err := interfaceToInt64(val)
 			if err != nil {
+				Conf.Logger.Printf("can't convert to int64 %+v", err)
+			}
+			if err != nil {
 				Conf.Logger.Fatalln(err)
 			}
 			key := replaceKey(values[0])
-			statsdCh <- map[string]map[string]int64{"timing": {key: intval}}
+			statsdCh <- &map[string]map[string]int64{"timing": {key: intval}}
+		}
+	}
+
+	for _, values := range self.gauge {
+		if val, ok := data.(map[string]interface{})[values[1]]; ok {
+			intval, err := interfaceToInt64(val)
+			if err != nil {
+				Conf.Logger.Printf("can't convert to int64 %+v", err)
+			}
+			if err != nil {
+				Conf.Logger.Fatalln(err)
+			}
+			key := replaceKey(values[0])
+			statsdCh <- &map[string]map[string]int64{"gauge": {key: intval}}
 		}
 	}
 }

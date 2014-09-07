@@ -8,6 +8,7 @@ import (
 
 type ConfigFile struct {
 	Influxdb *InfluxDBConfig
+	Statsd   *StatsdConfig
 	Groups   []*Group
 }
 
@@ -25,6 +26,10 @@ func LoadConfig(fileName string) ([]*Group, error) {
 
 	if configFile.Influxdb != nil {
 		InitInfluxdb(influxdbCh, configFile.Influxdb)
+	}
+
+	if configFile.Statsd != nil {
+		InitStatsd(statsdCh, configFile.Statsd)
 	}
 
 	for _, group := range configFile.Groups {
