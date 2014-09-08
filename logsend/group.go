@@ -57,12 +57,12 @@ func (rule *Rule) Match(line *string) interface{} {
 	// TODO: cache subexnames
 	out := make(map[string]interface{})
 	for i, value := range matches[1:] {
-		key, value, err := prepareValue(rule.regexp.SubexpNames()[i+1], value)
+		key, val, err := prepareValue(rule.regexp.SubexpNames()[i+1], value)
 		if err != nil {
 			Conf.Logger.Printf("can't prepareValue with %+v and %+v have err %+v", rule.regexp.SubexpNames()[i+1], value, err)
 			return nil
 		}
-		out[key] = value
+		out[key] = val
 	}
 	if len(out) > 0 {
 		return out
