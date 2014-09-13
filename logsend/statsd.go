@@ -32,13 +32,13 @@ func InitStatsd(ch chan *map[string]map[string]int64, conf *StatsdConfig) error 
 					switch op {
 					case "increment":
 						debug("send incr", key, val)
-						stats.Incr(key, val)
+						go stats.Incr(key, val)
 					case "timing":
 						debug("send timing", key, val)
-						stats.Timing(key, val)
+						go stats.Timing(key, val)
 					case "gauge":
 						debug("send gauge", key, val)
-						stats.Gauge(key, val)
+						go stats.Gauge(key, val)
 					}
 				}
 

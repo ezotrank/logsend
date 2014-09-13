@@ -109,7 +109,7 @@ type File struct {
 func (self *File) tail(group *Group) {
 	Conf.Logger.Printf("start tailing %+v", self.Tail.Filename)
 	for line := range self.Tail.Lines {
-		go checkLine(&line.Text, group.Rules)
+		checkLine(&line.Text, group.Rules)
 	}
 }
 
