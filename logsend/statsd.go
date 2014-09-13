@@ -92,15 +92,8 @@ func interfaceToInt64(i interface{}) (val int64, err error) {
 	return
 }
 
-func replaceKey(str string) string {
-	// hostname, _ := getHostname()
-	// return strings.Replace(str, `%HOST%`, "example.com", 1)
-	return str
-}
-
 func (self *StatsdSender) Send(data interface{}) {
 	for _, name := range self.increment {
-		name = replaceKey(name)
 		statsdCh <- &map[string]map[string]int64{"increment": {name: 1}}
 	}
 
@@ -113,8 +106,7 @@ func (self *StatsdSender) Send(data interface{}) {
 			if err != nil {
 				Conf.Logger.Fatalln(err)
 			}
-			key := replaceKey(values[0])
-			statsdCh <- &map[string]map[string]int64{"timing": {key: intval}}
+			statsdCh <- &map[string]map[string]int64{"timing": {values[0]: intval}}
 		}
 	}
 
@@ -127,8 +119,7 @@ func (self *StatsdSender) Send(data interface{}) {
 			if err != nil {
 				Conf.Logger.Fatalln(err)
 			}
-			key := replaceKey(values[0])
-			statsdCh <- &map[string]map[string]int64{"gauge": {key: intval}}
+			statsdCh <- &map[string]map[string]int64{"gauge": {values[0]: intval}}
 		}
 	}
 }
