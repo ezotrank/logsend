@@ -25,16 +25,17 @@ func WatchFiles(dir, configFile string) {
 	select {}
 }
 
-func assignFiles(files []os.FileInfo, groups []*Group) {
+func assignFiles(files []os.FileInfo, groups []*Group) error {
 	for _, group := range groups {
 		files, err := getFilesByGroup(files, group)
 		if err != nil {
-			Conf.Logger.Fatalf("can't get file %+v", err)
+			return err
 		}
 		for _, file := range files {
 			go file.tail(group)
 		}
 	}
+	return nil
 }
 
 func continueWatch(dir *string, groups []*Group) {
@@ -55,11 +56,11 @@ func continueWatch(dir *string, groups []*Group) {
 					file, err := os.Stat(ev.Name)
 					if err != nil {
 						Conf.Logger.Printf("can't get file %+v", err)
+						continue
 					}
 					files = append(files, file)
 					assignFiles(files, groups)
 				}
-				// debug(ev.IsCreate())
 			case err := <-watcher.Error:
 				Conf.Logger.Println("error:", err)
 			}
