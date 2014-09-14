@@ -1,44 +1,57 @@
-Getstarted:
+# Logsend
+---
+Logsend is a tool for managing your logs.
+
+
+## What is it
+
+This like [Logstash](http://logstash.net) but more tiny and written by [Golang](http://golang.org).
+At the current time support [Influxdb](http://influxdb.com) and [Statsd](https://github.com/etsy/statsd/) outputs.
+
+## Instalation
+
+Just download binary by your platform from [GitHub Latest Releases](https://github.com/ezotrank/logsend/releases/latest) and unzip.
+
+## Starting
 
 ```
-make
-./vendor/bin/logsend -log-dir=./tmp -send-buffer=1 -db-host="localhost:4444" -debug -database="test1" -udp -config=./config.json
+./logsend -watch-dir=~/some_logs_folder
 ```
-Examples:
 
-example.config.json
+## Configuration
+
+* [Influxdb config.json](#influxdb_config)
+* [Influxdb advanced config.json](#influxdb_advanced_config)
+* [Statsd config.json](#statsd_config)
+* [Full config.json](#full_config)
+
+**Influxdb configuration**
+
+Description:
+
+`"mask": "search.log$"` - match logs in watch-dir directory
+`"regexp": "metric dbcount (?P<count_INT>[0-9]+)$",` - regexp for matching line. But we want to store some values from this line and we should use named group with type association, in this case `count_INT` will be perform to field `count` with type `int`. Also supported notation `FLOAT`, `STRING`.
+`"name": "keys_count"` - database name in Influxdb
+
+***<a name="influxdb_config"></a>config.json:***
 
 ```
 {
+    "influxdb": {
+        "host": "host:4444",
+        "user": "root",
+        "password": "root",
+        "database": "logers"
+    },
     "groups": [
         {
-            "mask": "bee.[0-9]+.log$",
+            "mask": "search.log$",
             "rules": [
                 {
-                    "columns": [
-                        ["gate"],
-                        ["exec_time","float"]
-                    ],
-                    "name": "gate_response",
-                    "regexp": "chain_processor.+ .+MIRROR] ([a-zA-Z0-9_]+)_gate -> (.+)"
-                },
-                {
-                    "columns": [
-                        ["gate_id", "int"],
-                        ["host"]
-                    ],
-                    "name": "clicks",
-                    "regexp": "deeplink.+] {.+ \"gate_id\": ([0-9]+), .+ \"host\": \"([a-z.]*)\""
-                },
-                {
-                    "columns": [
-                        ["code","int"],
-                        ["adaptor"],
-                        ["resp_time","float"],
-                        ["host","GetHostname"]
-                    ],
-                    "name": "adaptors_response_time",
-                    "regexp": "web.+] ([0-9]+) .+ /adaptors/([a-zA-Z0-9_/]+) \\(.+\\) ([0-9]+.[0-9]+)ms$"
+                    "regexp": "metric dbcount (?P<count_INT>[0-9]+)$",
+                    "influxdb": {
+                        "name": "keys_count"
+                    }
                 }
             ]
         }
@@ -46,48 +59,197 @@ example.config.json
 }
 ```
 
-series
+**Advanced Influxdb configuration**
+
+Description:
+
+`"udp": true,` - sending packets thought UDP(require that Influxdb supported this option)
+
+`"send_buffer": 8` - messages per one packet. But don't forget, max size of packet should be no more then 1500 Byte
+
+Some times we need added not captured params, and for this purpose we used `extra_fields` key.
 
 ```
-[
-  {
-    "name" : "response_times",
-    "columns" : ["gate", "exec_time"],
-    "points" : [
-      [10, 123.33]
-    ]
-  }
+"extra_fields": [
+	["service", "search"],
+	["host", "HOST"]
 ]
 ```
 
+`["service", "search"],` - First is column name, second it's value.
+
+`["host", "HOST"]` - HOST it's a special keyword who's returned hostname of machine.
+
+***<a name="influxdb_advanced_config"></a>config.json***
+
 ```
-[
-  {
-    "name" : "clicks",
-    "columns" : ["gate_id", "adaptor", "resp_time", "host"],
-    "points" : [
-      [200, "check_something", 23.313, "test1.example.com"]
+{
+    "influxdb": {
+        "host": "host:4444",
+        "user": "root",
+        "password": "root",
+        "database": "logers",
+        "udp": true,
+        "send_buffer": 8
+    },
+    "groups": [
+        {
+            "mask": "search.log$",
+            "rules": [
+                {
+                    "regexp": "metric dbcount (?P<count_INT>[0-9]+)$",
+                    "influxdb": {
+                        "name": "keys_count",
+                        "extra_fields": [
+                        	["service", "search"],
+                      		["host", "HOST"]
+                    	]
+                    }
+                }
+            ]
+        }
     ]
-  }
-]
+}
 ```
 
+**Statsd configuration**
+
+Description:
+
+`["search.prepare_proposal_time", "prepare_proposals"]` - set `prepare_proposals` to `search.prepare_proposal_time` as timing
+`"search.prepare_proposals"` - increment by by this metric
+`["search.keys_count", "prepare_proposals"]` - set non integer metrics 
+
+***<a name="statsd_config"></a>config.json***
+
 ```
-[
-  {
-    "name" : "adaptors_response_time",
-    "columns" : ["code", "adaptor"],
-    "points" : [
-      [10, "test1.example.com"]
-    ]
-  }
-]
+{
+    "regexp": "PreapreProposals took (?P<prepare_proposals_DurationToMillisecond>.+)$",
+    "statsd": {
+        "timing": [
+        	["search.prepare_proposal_time", "prepare_proposals"]
+        ],
+        "increment": [
+            "search.prepare_proposals"
+        ],
+        "gauge": [
+        	["search.keys_count", "prepare_proposals"]
+        ]
+    }
+}
+```
+
+**Full Influx and Statsd configuration**
+
+***<a name="full_config"></a>config.json***
+
+```
+{
+  "influxdb": {
+    "host": "hosta:4444",
+    "user": "root",
+    "password": "root",
+    "database": "logers",
+    "udp": true,
+    "send_buffer": 8
+  },
+  "statsd": {
+    "host": "hostb:8125",
+    "prefix": "test.",
+    "interval": "1s"
+  },
+  "groups": [
+    {
+        "mask": "search.log$",
+        "rules": [
+            {
+                "regexp": "metric dbcount (?P<count_INT>[0-9]+)$",
+                "influxdb": {
+                    "name": "g_keys_count",
+                    "extra_fields": [
+                      ["service", "search"],
+                      ["host", "HOST"]
+                    ]
+                },
+                "statsd": {
+                  "gauge": [
+                    ["search.keys_count", "count"]
+                  ]
+                }
+            },
+            {
+                "regexp": "PreapreProposals took (?P<prepare_proposals_DurationToMillisecond>.+)$",
+                "influxdb": {
+                    "name": "g_benchmark",
+                    "extra_fields": [
+                      ["service", "search"],
+                      ["host", "HOST"]
+                    ]
+                },
+                "statsd": {
+                  "timing": [
+                    ["search.prepare_proposal_time", "prepare_proposals"]
+                  ],
+                  "increment": [
+                    "search.prepare_proposals"
+                  ]
+                }
+            },
+            {
+                "regexp": "Completed (?P<code_INT>\\d+) .+ in (?P<tm_DurationToMillisecond>.+)$",
+                "influxdb": {
+                    "name": "g_responses",
+                    "extra_fields": [
+                      ["service", "search"],
+                      ["host", "HOST"]
+                    ]
+                },
+                "statsd": {
+                  "increment": [
+                    "search.requests"
+                  ]
+                }
+            }
+        ]
+    },
+    {
+        "mask": "map.log$",
+        "rules": [
+            {
+                "regexp": "metric dbcount (?P<count_INT>[0-9]+)$",
+                "influxdb": {
+                    "name": "g_keys_count",
+                    "extra_fields": [
+                      ["service", "map"],
+                      ["host", "HOST"]
+                    ]
+                }
+            },
+            {
+                "regexp": "PreapreProposals took (?P<prepare_proposals_DurationToMillisecond>.+)$",
+                "influxdb": {
+                    "name": "g_benchmark",
+                    "extra_fields": [
+                      ["service", "map"],
+                      ["host", "HOST"]
+                    ]
+                }
+            },
+            {
+                "regexp": "Completed (?P<code_INT>\\d+) .+ in (?P<tm_DurationToMillisecond>.+)$",
+                "influxdb": {
+                    "name": "g_responses",
+                    "extra_fields": [
+                      ["service", "map"],
+                      ["host", "HOST"]
+                    ]
+                }
+            }
+        ]
+    }
+  ]
+}
 ```
 
 
-
-todo
-
-- describe converters
-- config checker
-- add new configs
+## Tips
