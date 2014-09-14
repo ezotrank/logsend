@@ -15,7 +15,7 @@ func extendValue(name *string) (val interface{}, err error) {
 	switch *name {
 	default:
 		val, err = *name, nil
-	case "getHostName":
+	case "HOST":
 		val, err = getHostname()
 	}
 	return
