@@ -78,22 +78,24 @@ func (self *InfluxdbSender) Send(data interface{}) {
 	series := &influxdb.Series{
 		Name: self.name,
 	}
+	columns := make([]string, 0)
+	points := make([]interface{}, 0)
 	switch data.(type) {
 	case map[string]interface{}:
-		columns := make([]string, 0)
-		points := make([]interface{}, 0)
 		for key, value := range data.(map[string]interface{}) {
 			columns = append(columns, key)
 			points = append(points, value)
 		}
-		for _, extraField := range self.extraFields {
-			if val, err := extendValue(extraField[1]); err == nil {
-				columns = append(columns, *extraField[0])
-				points = append(points, val)
-			}
-		}
-		series.Columns = columns
-		series.Points = [][]interface{}{points}
 	}
+
+	for _, extraField := range self.extraFields {
+		if val, err := extendValue(extraField[1]); err == nil {
+			columns = append(columns, *extraField[0])
+			points = append(points, val)
+		}
+	}
+	series.Columns = columns
+	series.Points = [][]interface{}{points}
+
 	influxdbCh <- series
 }
