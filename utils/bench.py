@@ -1,8 +1,7 @@
 import os
 import time
 
-line_per_second = 25000
-cycles = 10
+lines_count = 250000
 log_file_name = 'tmp/test.log'
 config_file = 'config.json'
 logsend_binary = 'logsend'
@@ -81,8 +80,7 @@ def bench(logs_count=1, config=config):
 
     for x in range(0, logs_count):
         with open(log_file_name + str(x), "a") as myfile:
-            for x in range(0, cycles):
-                myfile.write(msg*line_per_second)
+            myfile.write(msg*lines_count)
 
     os.system("time %s %s" % (binary, run_params))
     os.system("echo '\n'")
@@ -90,16 +88,16 @@ def bench(logs_count=1, config=config):
 
 
 if __name__ == '__main__':
-    print("with 1 file containing %s matching lines each" % (cycles*line_per_second))
+    print("with 1 file containing %s matching lines each" % (lines_count))
     bench()
-    print("with 5 file containing %s matching lines each" % (cycles*line_per_second))
+    print("with 5 file containing %s matching lines each" % (lines_count))
     bench(5)
-    print("with 10 file containing %s matching lines each" % (cycles*line_per_second))
+    print("with 10 file containing %s matching lines each" % (lines_count))
     bench(10)
 
-    print("with 1 file containing %s matching lines each with 3 rules" % (cycles*line_per_second))
+    print("with 1 file containing %s matching lines each with 3 rules" % (lines_count))
     bench(1,config2)
-    print("with 5 file containing %s matching lines each with 3 rules" % (cycles*line_per_second))
+    print("with 5 file containing %s matching lines each with 3 rules" % (lines_count))
     bench(5,config2)
-    print("with 10 file containing %s matching lines each with 3 rules" % (cycles*line_per_second))
+    print("with 10 file containing %s matching lines each with 3 rules" % (lines_count))
     bench(10,config2)

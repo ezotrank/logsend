@@ -10,17 +10,25 @@ import (
 )
 
 var (
-	watchDir      = flag.String("watch-dir", "./tmp", "log directories")
-	config        = flag.String("config", "config.json", "path to config.json file")
-	check         = flag.Bool("check", false, "check config.json")
-	debug         = flag.Bool("debug", false, "turn on debug messages")
-	continueWatch = flag.Bool("continue-watch", false, "watching folder for new files")
-	logFile       = flag.String("log", "", "log file")
-	dryRun        = flag.Bool("dry-run", false, "not send data")
-	memprofile    = flag.String("memprofile", "", "memory profiler")
-	maxprocs      = flag.Int("maxprocs", 0, "max count of cpu")
-	readWholeLog  = flag.Bool("read-whole-log", false, "read whole logs")
-	readOnce      = flag.Bool("read-once", false, "read logs once and exit")
+	watchDir           = flag.String("watch-dir", "./tmp", "log directories")
+	config             = flag.String("config", "config.json", "path to config.json file")
+	check              = flag.Bool("check", false, "check config.json")
+	debug              = flag.Bool("debug", false, "turn on debug messages")
+	continueWatch      = flag.Bool("continue-watch", false, "watching folder for new files")
+	logFile            = flag.String("log", "", "log file")
+	dryRun             = flag.Bool("dry-run", false, "not send data")
+	memprofile         = flag.String("memprofile", "", "memory profiler")
+	maxprocs           = flag.Int("maxprocs", 0, "max count of cpu")
+	readWholeLog       = flag.Bool("read-whole-log", false, "read whole logs")
+	readOnce           = flag.Bool("read-once", false, "read logs once and exit")
+	influxdbHost       = flag.String("influx-host", "", "")
+	influxdbUser       = flag.String("influx-user", "root", "")
+	influxdbPassword   = flag.String("influx-password", "root", "")
+	influxdbDatabase   = flag.String("influx-dbname", "", "")
+	influxdbUdp        = flag.Bool("influx-udp", true, "")
+	influxdbSendBuffer = flag.Int("influx-udp-buffer", 8, "")
+	influxdbSeriesName = flag.String("influx-series-name", "", "")
+	regex              = flag.String("regex", "", "")
 )
 
 func main() {
@@ -56,6 +64,19 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("ok")
+		os.Exit(0)
+	}
+
+	if *influxdbHost != "" {
+		influxdbConfig := &logsend.InfluxDBConfig{
+			Host:       *influxdbHost,
+			User:       *influxdbUser,
+			Password:   *influxdbPassword,
+			Database:   *influxdbDatabase,
+			Udp:        *influxdbUdp,
+			SendBuffer: *influxdbSendBuffer,
+		}
+		logsend.ProcessStdin(influxdbConfig, *regex, *influxdbSeriesName)
 		os.Exit(0)
 	}
 
