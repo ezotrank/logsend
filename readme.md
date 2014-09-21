@@ -8,6 +8,95 @@ Logsend is a tool for managing your logs.
 This like [Logstash](http://logstash.net) but more tiny and written by [Golang](http://golang.org).
 At the current time support [Influxdb](http://influxdb.com) and [Statsd](https://github.com/etsy/statsd/) outputs.
 
+## Benchmarks
+<a name="benchmarks"></a>
+
+### With 1 rules
+
+| Log files | Lines per log | Result (real/user/sys)       |   
+|:----------:|:-------------:|:----------------------------:|
+| 1          | 250k          | 0m3.186s 0m3.742s 0m1.672s   |
+| 5          | 250k          | 0m5.641s 0m13.423s 0m1.015s  |
+| 10         | 250k          | 0m8.577s 0m25.781s 0m1.341s  |
+
+***config.json***
+
+```
+{
+  "influxdb": {
+    "host": "localhost:4444",
+    "user": "root",
+    "password": "root",
+    "database": "logers",
+    "udp": true,
+    "send_buffer": 8
+  },
+  "groups": [
+    {
+        "mask": "test.log",
+        "rules": [
+            {
+                "regexp": "test string (?P<word_STRING>\\\\w+)",
+                "influxdb": {
+                    "name": "test"
+                }
+            }
+        ]
+    }
+  ]
+}
+```
+
+### With 3 rules
+
+| Log files | Lines per log | Result (real/user/sys)       |   
+|:----------:|:-------------:|:----------------------------:|
+| 1          | 250k          | 0m5.722s 0m7.638s 0m3.779s   |
+| 5          | 250k          | 0m9.676s 0m30.553s 0m2.410s  |
+| 10         | 250k          | 0m18.385s 0m58.795s 0m2.534s |
+
+
+***config.json***
+
+```
+{
+  "influxdb": {
+    "host": "localhost:4444",
+    "user": "root",
+    "password": "root",
+    "database": "logers",
+    "udp": true,
+    "send_buffer": 8
+  },
+  "groups": [
+    {
+        "mask": "test.log",
+        "rules": [
+            {
+                "regexp": "test string (?P<word_STRING>\\\\w+)",
+                "influxdb": {
+                    "name": "test"
+                }
+            },
+            {
+                "regexp": "(?P<word_STRING>\\\\w+) string one",
+                "influxdb": {
+                    "name": "test"
+                }
+            },
+            {
+                "regexp": "string (?P<word_STRING>\\\\w+) one",
+                "influxdb": {
+                    "name": "test"
+                }
+            }
+        ]
+    }
+  ]
+}
+```
+
+
 ## Instalation
 
 Just download binary by your platform from [GitHub Latest Releases](https://github.com/ezotrank/logsend/releases/latest) and unzip.

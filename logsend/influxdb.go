@@ -41,7 +41,9 @@ func InitInfluxdb(ch chan *influxdb.Series, conf *InfluxDBConfig) error {
 			buf = append(buf, series)
 			if len(buf) >= conf.SendBuffer {
 				if conf.Udp {
-					go client.WriteSeriesOverUDP(buf)
+					if !Conf.DryRun {
+						go client.WriteSeriesOverUDP(buf)
+					}
 				} else {
 					go client.WriteSeries(buf)
 				}

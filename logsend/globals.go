@@ -13,19 +13,18 @@ type Configuration struct {
 	Memprofile    string
 	Logger        *logpkg.Logger
 	DryRun        bool
+	ReadWholeLog  bool
+	ReadOnce      bool
 	memprofile    *os.File
 	Cpuprofile    string
 	cpuprofile    *os.File
 }
 
 var Conf = &Configuration{
-	WatchDir:      "",
-	ContinueWatch: true,
-	Debug:         false,
-	Memprofile:    "",
-	Cpuprofile:    "",
-	Logger:        logpkg.New(os.Stderr, "", logpkg.Ldate|logpkg.Ltime|logpkg.Lshortfile),
-	DryRun:        false,
+	WatchDir:   "",
+	Memprofile: "",
+	Cpuprofile: "",
+	Logger:     logpkg.New(os.Stderr, "", logpkg.Ldate|logpkg.Ltime|logpkg.Lshortfile),
 }
 
 var (

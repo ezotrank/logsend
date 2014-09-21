@@ -19,6 +19,8 @@ var (
 	dryRun        = flag.Bool("dry-run", false, "not send data")
 	memprofile    = flag.String("memprofile", "", "memory profiler")
 	maxprocs      = flag.Int("maxprocs", 0, "max count of cpu")
+	readWholeLog  = flag.Bool("read-whole-log", false, "read whole logs")
+	readOnce      = flag.Bool("read-once", false, "read logs once and exit")
 )
 
 func main() {
@@ -44,6 +46,8 @@ func main() {
 	logsend.Conf.WatchDir = *watchDir
 	logsend.Conf.Memprofile = *memprofile
 	logsend.Conf.DryRun = *dryRun
+	logsend.Conf.ReadWholeLog = *readWholeLog
+	logsend.Conf.ReadOnce = *readOnce
 
 	if *check {
 		_, err := logsend.LoadConfig(*config)
