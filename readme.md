@@ -11,9 +11,9 @@ At the current time support [Influxdb](http://influxdb.com) and [Statsd](https:/
 ## Benchmarks
 <a name="benchmarks"></a>
 
-### With 1 rules
+### With 1 rule
 
-| Log files | Lines per log | Result (real/user/sys)       |   
+| Log files | Lines per log | Result (real/user/sys)       |
 |:----------:|:-------------:|:----------------------------:|
 | 1          | 250k          | 0m3.186s 0m3.742s 0m1.672s   |
 | 5          | 250k          | 0m5.641s 0m13.423s 0m1.015s  |
@@ -49,7 +49,7 @@ At the current time support [Influxdb](http://influxdb.com) and [Statsd](https:/
 
 ### With 3 rules
 
-| Log files | Lines per log | Result (real/user/sys)       |   
+| Log files | Lines per log | Result (real/user/sys)       |
 |:----------:|:-------------:|:----------------------------:|
 | 1          | 250k          | 0m5.722s 0m7.638s 0m3.779s   |
 | 5          | 250k          | 0m9.676s 0m30.553s 0m2.410s  |
@@ -207,7 +207,7 @@ Description:
 
 `["search.prepare_proposal_time", "prepare_proposals"]` - set `prepare_proposals` to `search.prepare_proposal_time` as timing
 `"search.prepare_proposals"` - increment by by this metric
-`["search.keys_count", "prepare_proposals"]` - set non integer metrics 
+`["search.keys_count", "prepare_proposals"]` - set non integer metrics
 
 ***<a name="statsd_config"></a>config.json***
 
