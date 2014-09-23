@@ -19,7 +19,7 @@ func WatchFiles(dir, configFile string) {
 	// get list of all files in watch dir
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		Conf.Logger.Fatalf("can't read config dir: %+v", err)
+		Conf.Logger.Fatalf("can't read logs dir: %+v", err)
 	}
 
 	// assign file per group

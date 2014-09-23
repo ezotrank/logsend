@@ -3,24 +3,25 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/andrew-d/go-termutil"
 	"github.com/ezotrank/logsend/logsend"
 	logpkg "log"
 	"os"
-	"runtime"
 )
 
 var (
-	watchDir           = flag.String("watch-dir", "./tmp", "log directories")
-	config             = flag.String("config", "config.json", "path to config.json file")
-	check              = flag.Bool("check", false, "check config.json")
-	debug              = flag.Bool("debug", false, "turn on debug messages")
-	continueWatch      = flag.Bool("continue-watch", false, "watching folder for new files")
-	logFile            = flag.String("log", "", "log file")
-	dryRun             = flag.Bool("dry-run", false, "not send data")
-	memprofile         = flag.String("memprofile", "", "memory profiler")
-	maxprocs           = flag.Int("maxprocs", 0, "max count of cpu")
-	readWholeLog       = flag.Bool("read-whole-log", false, "read whole logs")
-	readOnce           = flag.Bool("read-once", false, "read logs once and exit")
+	watchDir      = flag.String("watch-dir", "./tmp", "log directories")
+	config        = flag.String("config", "", "path to config.json file")
+	check         = flag.Bool("check", false, "check config.json")
+	debug         = flag.Bool("debug", false, "turn on debug messages")
+	continueWatch = flag.Bool("continue-watch", false, "watching folder for new files")
+	logFile       = flag.String("log", "", "log file")
+	dryRun        = flag.Bool("dry-run", false, "not send data")
+	memprofile    = flag.String("memprofile", "", "memory profiler")
+	maxprocs      = flag.Int("maxprocs", 0, "max count of cpu")
+	readWholeLog  = flag.Bool("read-whole-log", false, "read whole logs")
+	readOnce      = flag.Bool("read-once", false, "read logs once and exit")
+
 	influxdbHost       = flag.String("influx-host", "", "")
 	influxdbUser       = flag.String("influx-user", "root", "")
 	influxdbPassword   = flag.String("influx-password", "root", "")
@@ -28,7 +29,11 @@ var (
 	influxdbUdp        = flag.Bool("influx-udp", true, "")
 	influxdbSendBuffer = flag.Int("influx-udp-buffer", 8, "")
 	influxdbSeriesName = flag.String("influx-series-name", "", "")
-	regex              = flag.String("regex", "", "")
+
+	statsdHost   = flag.String("statsd-host", "", "")
+	statsdPrefix = flag.String("statsd-prefix", "", "")
+
+	regex = flag.String("regex", "", "")
 )
 
 func main() {
@@ -42,12 +47,6 @@ func main() {
 		defer file.Close()
 		logsend.Conf.Logger = logpkg.New(file, "", logpkg.Ldate|logpkg.Ltime|logpkg.Lshortfile)
 	}
-
-	if *maxprocs <= 0 {
-		*maxprocs = runtime.NumCPU()
-	}
-	runtime.GOMAXPROCS(*maxprocs)
-	fmt.Printf("set GOMAXPROCS to %v\n", *maxprocs)
 
 	logsend.Conf.Debug = *debug
 	logsend.Conf.ContinueWatch = *continueWatch
@@ -67,18 +66,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	if *influxdbHost != "" {
-		influxdbConfig := &logsend.InfluxDBConfig{
-			Host:       *influxdbHost,
-			User:       *influxdbUser,
-			Password:   *influxdbPassword,
-			Database:   *influxdbDatabase,
-			Udp:        *influxdbUdp,
-			SendBuffer: *influxdbSendBuffer,
-		}
-		logsend.ProcessStdin(influxdbConfig, *regex, *influxdbSeriesName)
-		os.Exit(0)
+	if termutil.Isatty(os.Stdin.Fd()) {
+		logsend.WatchFiles(*watchDir, *config)
+	} else {
+		flag.VisitAll(logsend.LoadRawConfig)
+		logsend.ProcessStdin()
 	}
-
-	logsend.WatchFiles(*watchDir, *config)
+	os.Exit(0)
 }

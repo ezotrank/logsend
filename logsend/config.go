@@ -2,6 +2,7 @@ package logsend
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"os"
 )
@@ -10,6 +11,10 @@ type ConfigFile struct {
 	Influxdb *InfluxDBConfig
 	Statsd   *StatsdConfig
 	Groups   []*Group
+}
+
+func LoadRawConfig(f *flag.Flag) {
+	rawConfig[f.Name] = f.Value
 }
 
 func LoadConfig(fileName string) ([]*Group, error) {

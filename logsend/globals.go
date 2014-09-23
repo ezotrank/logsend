@@ -28,7 +28,8 @@ var Conf = &Configuration{
 }
 
 var (
-	senders = []Sender{}
+	senders   = []Sender{}
+	rawConfig = make(map[string]interface{}, 0)
 )
 
 func mempprof() {
