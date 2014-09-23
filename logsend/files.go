@@ -146,17 +146,19 @@ func (self *File) tail() {
 	Conf.Logger.Printf("start tailing %+v", self.Tail.Filename)
 	defer func() { self.doneCh <- true }()
 	for line := range self.Tail.Lines {
-		checkLine(&line.Text, self.group.Rules)
+		checkLineRules(&line.Text, self.group.Rules)
 	}
 }
 
-func checkLine(line *string, rules []*Rule) error {
-	for _, rule := range rules {
-		match := rule.Match(line)
-		if match == nil {
-			continue
-		}
+func checkLineRule(line *string, rule *Rule) {
+	match := rule.Match(line)
+	if match != nil {
 		rule.send(match)
 	}
-	return nil
+}
+
+func checkLineRules(line *string, rules []*Rule) {
+	for _, rule := range rules {
+		checkLineRule(line, rule)
+	}
 }

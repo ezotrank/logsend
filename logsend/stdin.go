@@ -20,8 +20,6 @@ func ProcessStdin(conf *InfluxDBConfig, regex, seriesName string) error {
 	if err := rule.loadRegexp(); err != nil {
 		Conf.Logger.Fatalln(err)
 	}
-	debug(rule.regexp)
-	ruleT := []*Rule{rule}
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
@@ -32,7 +30,7 @@ func ProcessStdin(conf *InfluxDBConfig, regex, seriesName string) error {
 			break
 		}
 
-		checkLine(&line, ruleT)
+		checkLineRule(&line, rule)
 	}
 	return nil
 }
