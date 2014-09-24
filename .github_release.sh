@@ -1,4 +1,6 @@
 #!/bin/bash
+# Example use:
+# TAG=v1.2 TOKEN=447879c5af5887eab22725605783e86d3304bc99 ./.github_release.sh
 
 if [ -z "$TAG" ]; then
   echo "TAG is empty please do 'export TAG=v0.1' for example"
