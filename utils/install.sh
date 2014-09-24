@@ -20,7 +20,11 @@ download_logsend(){
   fi
   url="$REPO/releases/download/$latest_release_tag/$os_package.gz"
   curl -L $url > "$TMP_DIR/logsend.gz" && (cd $TMP_DIR && gunzip -f logsend.gz)
+  if [ -n "${PREFIX_BIN}" ]; then
+    INSTALL_DIR=$PREFIX_BIN
+  fi
   mv -f $TMP_DIR/logsend $INSTALL_DIR && chmod 755 $INSTALL_DIR/logsend
+  echo "Logsend installed to $INSTALL_DIR/logsend"
 }
 
 
