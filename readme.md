@@ -8,6 +8,23 @@ Logsend is a tool for managing your logs.
 This like [Logstash](http://logstash.net) but more tiny and written by [Golang](http://golang.org).
 At the current time support [Influxdb](http://influxdb.com) and [Statsd](https://github.com/etsy/statsd/) outputs.
 
+##<a name="instalation"></a> Instalation
+
+Just download binary by your platform from [GitHub Latest Releases](https://github.com/ezotrank/logsend/releases/latest) and unzip, or use this installer
+
+Install logsend to `/usr/local/bin`
+
+```
+curl https://raw.githubusercontent.com/ezotrank/logsend/master/utils/install.sh|bash
+
+```
+OR to your own directory
+
+```
+export PREFIX_BIN=`pwd` && curl https://raw.githubusercontent.com/ezotrank/logsend/master/utils/install.sh|bash
+```
+
+
 ## Benchmarks
 <a name="benchmarks"></a>
 
@@ -96,10 +113,6 @@ At the current time support [Influxdb](http://influxdb.com) and [Statsd](https:/
 }
 ```
 
-
-## Instalation
-
-Just download binary by your platform from [GitHub Latest Releases](https://github.com/ezotrank/logsend/releases/latest) and unzip.
 
 ## Starting
 
