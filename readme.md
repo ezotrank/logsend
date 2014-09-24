@@ -8,7 +8,7 @@ Logsend is a tool for managing your logs.
 This like [Logstash](http://logstash.net) but more tiny and written by [Golang](http://golang.org).
 At the current time support [Influxdb](http://influxdb.com) and [Statsd](https://github.com/etsy/statsd/) outputs.
 
-##<a name="instalation"></a> Instalation
+##<a name="instalation"></a>Instalation
 
 Just download binary by your platform from [GitHub Latest Releases](https://github.com/ezotrank/logsend/releases/latest) and unzip, or use this installer
 
@@ -23,6 +23,35 @@ OR to your own directory
 ```
 export PREFIX_BIN=`pwd` && curl https://raw.githubusercontent.com/ezotrank/logsend/master/utils/install.sh|bash
 ```
+
+##<a name="how_use"></a>How it can be used
+
+As daemon, watching file in directory:
+
+```
+./logsend -watch-dir=/logs -config=config.json
+```
+
+Using PIPE
+
+```
+tail -F /logs/*.log |logsend -config=config.json
+```
+
+```
+cat /logs/*.log |logsend -config=config.json
+```
+
+```
+ssh user@host "tail -F /logs/*.log"|logsend -config=config.json
+```
+
+Or using PIPE without config.json
+
+```
+tail -F /logs/*.log |logsend -influx-dbname test -influx-host 'hosta:4444' -regex='\d+'
+```
+
 
 
 ## Benchmarks
