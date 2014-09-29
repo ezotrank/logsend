@@ -13,6 +13,7 @@ deps:
 	go get
 
 test:
+	go get 'code.google.com/p/go.tools/cmd/vet'
 	go test ./logsend
 	go vet ./logsend
 
