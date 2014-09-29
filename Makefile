@@ -16,6 +16,9 @@ test:
 	go test ./logsend
 	go vet ./logsend
 
+benchmark:
+	go test -run=XXX -bench=. ./logsend
+
 format:
 	gofmt -w ./logsend ./main.go
 
