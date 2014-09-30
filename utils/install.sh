@@ -11,7 +11,7 @@ REPO="https://github.com/ezotrank/logsend"
 TMP_DIR="/tmp"
 INSTALL_DIR="/usr/local/bin"
 
-download_logsend(){
+download(){
   latest_release_tag=$(curl https://api.github.com/repos/ezotrank/logsend/releases|grep 'tag_name'|head -n1|awk '{print $2}'|sed -e 's/,//g'|sed -e 's/"//g')
   if [ "$(uname)" = "Darwin" ]; then
     os_package=$DARWIN_BIN_NAME
@@ -20,16 +20,19 @@ download_logsend(){
   fi
   url="$REPO/releases/download/$latest_release_tag/$os_package.gz"
   curl -L $url > "$TMP_DIR/logsend.gz" && (cd $TMP_DIR && gunzip -f logsend.gz)
-  if [ -n "${PREFIX_BIN}" ]; then
-    INSTALL_DIR=$PREFIX_BIN
+}
+
+install(){
+  if [ -n "$1" ]; then
+    INSTALL_DIR=$1
   fi
-  mv -f $TMP_DIR/logsend $INSTALL_DIR && chmod 755 $INSTALL_DIR/logsend
+  cp -f $TMP_DIR/logsend $INSTALL_DIR && chmod 755 $INSTALL_DIR/logsend
   echo "Logsend installed to $INSTALL_DIR/logsend"
 }
 
-
 logsend_install(){
-  download_logsend
+  download
+  install $1
 }
 
-logsend_install "$@"
+logsend_install $@

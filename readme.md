@@ -15,13 +15,12 @@ Just download binary by your platform from [GitHub Latest Releases](https://gith
 Install logsend to `/usr/local/bin`
 
 ```
-curl -L http://logsend.io/get|bash
-
+curl -L http://logsend.io/get|sudo bash
 ```
 OR to your own directory
 
 ```
-export PREFIX_BIN=`pwd` && curl -L http://logsend.io/get|bash
+curl -L http://logsend.io/get|bash -s /tmp
 ```
 
 ##<a name="how_use"></a>How it can be used
