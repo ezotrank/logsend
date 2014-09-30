@@ -15,13 +15,13 @@ Just download binary by your platform from [GitHub Latest Releases](https://gith
 Install logsend to `/usr/local/bin`
 
 ```
-curl https://raw.githubusercontent.com/ezotrank/logsend/master/utils/install.sh|bash
+curl -L http://logsend.io/get|bash
 
 ```
 OR to your own directory
 
 ```
-export PREFIX_BIN=`pwd` && curl https://raw.githubusercontent.com/ezotrank/logsend/master/utils/install.sh|bash
+export PREFIX_BIN=`pwd` && curl -L http://logsend.io/get|bash
 ```
 
 ##<a name="how_use"></a>How it can be used
@@ -29,10 +29,10 @@ export PREFIX_BIN=`pwd` && curl https://raw.githubusercontent.com/ezotrank/logse
 As daemon, watching file in directory:
 
 ```
-./logsend -watch-dir=/logs -config=config.json
+logsend -watch-dir=/logs -config=config.json
 ```
 
-Using PIPE
+Using PIPE:
 
 ```
 tail -F /logs/*.log |logsend -config=config.json
@@ -46,12 +46,17 @@ cat /logs/*.log |logsend -config=config.json
 ssh user@host "tail -F /logs/*.log"|logsend -config=config.json
 ```
 
-Or using PIPE without config.json
+Or using PIPE without config.json:
 
 ```
 tail -F /logs/*.log |logsend -influx-dbname test -influx-host 'hosta:4444' -regex='\d+'
 ```
 
+Daemonize:
+
+```
+logsend -watch-dir=/logs -config=config.json 2> error.log &
+```
 
 
 ## Benchmarks
@@ -146,7 +151,7 @@ tail -F /logs/*.log |logsend -influx-dbname test -influx-host 'hosta:4444' -rege
 ## Starting
 
 ```
-./logsend -watch-dir=~/some_logs_folder
+logsend -watch-dir=~/some_logs_folder
 ```
 
 ## Configuration
@@ -382,4 +387,6 @@ Description:
 }
 ```
 
-## Tips
+## Status
+
+[![Build Status](https://travis-ci.org/ezotrank/logsend.svg?branch=master)](https://travis-ci.org/ezotrank/logsend)

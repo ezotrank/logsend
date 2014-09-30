@@ -5,12 +5,12 @@ import (
 )
 
 func benchmarkCheckLineRule(text *string, rule *Rule, b *testing.B) {
-        for n := 0; n < b.N; n++ {
-			CheckLineRule(text, rule)
-        }
+	for n := 0; n < b.N; n++ {
+		CheckLineRule(text, rule)
+	}
 }
 
-func BenchmarkCheckLineRuleNotMatch(b *testing.B)  {
+func BenchmarkCheckLineRuleNotMatch(b *testing.B) {
 	str := `test word one`
 	regex := ""
 	rule := &Rule{
@@ -20,7 +20,7 @@ func BenchmarkCheckLineRuleNotMatch(b *testing.B)  {
 	benchmarkCheckLineRule(&str, rule, b)
 }
 
-func BenchmarkCheckLineRuleSimpleMatch(b *testing.B)  {
+func BenchmarkCheckLineRuleSimpleMatch(b *testing.B) {
 	str := `test word one`
 	regex := `test word one`
 	rule := &Rule{
@@ -30,7 +30,7 @@ func BenchmarkCheckLineRuleSimpleMatch(b *testing.B)  {
 	benchmarkCheckLineRule(&str, rule, b)
 }
 
-func BenchmarkCheckLineRuleSimpleMatchGroup(b *testing.B)  {
+func BenchmarkCheckLineRuleSimpleMatchGroup(b *testing.B) {
 	str := `test word one`
 	regex := `test (?P<test_STRING>\w+) one`
 	rule := &Rule{
@@ -40,7 +40,7 @@ func BenchmarkCheckLineRuleSimpleMatchGroup(b *testing.B)  {
 	benchmarkCheckLineRule(&str, rule, b)
 }
 
-func BenchmarkCheckLineRuleSimpleMultiMatchGroup(b *testing.B)  {
+func BenchmarkCheckLineRuleSimpleMultiMatchGroup(b *testing.B) {
 	str := `test word one`
 	regex := `(?P<test_STRING>\w+) (?P<test1_STRING>\w+) (?P<test2_STRING>\w+)`
 	rule := &Rule{
