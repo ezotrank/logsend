@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-type StatsdConfig struct {
-	Host     string
-	Prefix   string
-	Interval string
-}
-
 var (
 	statsdCh        = make(chan *map[string]map[string]int64, 0)
 	statsdHost      = flag.String("statsd-host", "", "statsd host")
