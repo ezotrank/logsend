@@ -59,6 +59,10 @@ func i2float64(i interface{}) float64 {
 	case string:
 		val, _ := strconv.ParseFloat(i.(string), 32)
 		return val
+	case int:
+		return float64(i.(int))
+	case float64:
+		return i.(float64)
 	}
 	panic(i)
 }
@@ -68,6 +72,10 @@ func i2int(i interface{}) int {
 	case string:
 		val, _ := strconv.ParseFloat(i.(string), 32)
 		return int(val)
+	case int:
+		return i.(int)
+	case float64:
+		return int(i.(float64))
 	}
 	panic(i)
 }
