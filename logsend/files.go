@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 )
 
 func WatchFiles(dir, configFile string) {
@@ -107,7 +106,7 @@ func continueWatch(dir *string, groups []*Group) {
 
 func getFilesByGroup(allFiles []os.FileInfo, group *Group) ([]*File, error) {
 	files := make([]*File, 0)
-	regex := regexp.MustCompile(*group.Mask)
+	regex := *group.Mask
 	for _, f := range allFiles {
 		if !regex.MatchString(f.Name()) {
 			continue

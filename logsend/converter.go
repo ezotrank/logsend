@@ -41,6 +41,9 @@ func durationToMillisecond(val *string) (result interface{}, err error) {
 func prepareValue(source, data string) (key string, val interface{}, err error) {
 	tSource := strings.Split(source, "_")
 	key = strings.Join(tSource[:len(tSource)-1], "_")
+	if key == "" {
+		key = source
+	}
 	keyType := tSource[len(tSource)-1]
 	switch keyType {
 	default:

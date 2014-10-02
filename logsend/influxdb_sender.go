@@ -1,32 +1,46 @@
 package logsend
 
 import (
+	"flag"
 	influxdb "github.com/influxdb/influxdb/client"
 	"net/http"
 )
 
-type InfluxDBConfig struct {
-	Host       string
-	User       string
-	Password   string
-	Database   string
-	Udp        bool
-	SendBuffer int
-}
-
+// need remove this global variable on all senders
 var (
-	influxdbCh = make(chan *influxdb.Series, 0)
+	influxdbCh         = make(chan *influxdb.Series, 0)
+	influxdbHost       = flag.String("influxdb-host", "", "influxdb host")
+	influxdbUser       = flag.String("influxdb-user", "root", "influxdb user")
+	influxdbPassword   = flag.String("influxdb-password", "root", "influxdb password")
+	influxdbDatabase   = flag.String("influxdb-database", "", "influxdb database")
+	influxdbUdp        = flag.Bool("influxdb-udp", true, "influxdb send via UDP")
+	influxdbSendBuffer = flag.Int("influxdb-send_buffer", 8, "influxdb UDP buffer size")
+	influxdbSeriesName = flag.String("influxdb-name", "", "influxdb series name")
 )
 
-func InitInfluxdb(ch chan *influxdb.Series, conf *InfluxDBConfig) error {
+func init() {
+	Conf.registeredSenders["influxdb"] = &SenderRegister{Init: InitInfluxdb, Get: NewInfluxdbSender}
+}
+
+func InitInfluxdb(conf interface{}) {
 	config := &influxdb.ClientConfig{
-		Host:       conf.Host,
-		Username:   conf.User,
-		Password:   conf.Password,
-		Database:   conf.Database,
-		IsUDP:      conf.Udp,
+		Host:       conf.(map[string]interface{})["host"].(string),
 		HttpClient: http.DefaultClient,
 	}
+
+	if val, ok := conf.(map[string]interface{})["udp"]; ok {
+		config.IsUDP = val.(bool)
+	} else {
+		config.Username = conf.(map[string]interface{})["user"].(string)
+		config.Password = conf.(map[string]interface{})["password"].(string)
+		config.Database = conf.(map[string]interface{})["database"].(string)
+	}
+
+	sendBuffer := 0
+	if val, ok := conf.(map[string]interface{})["send_buffer"]; ok {
+		sendBuffer = i2int(val)
+	}
+
 	client, err := influxdb.NewClient(config)
 	if err != nil {
 		Conf.Logger.Fatalln(err)
@@ -36,11 +50,11 @@ func InitInfluxdb(ch chan *influxdb.Series, conf *InfluxDBConfig) error {
 	go func() {
 		Conf.Logger.Println("Influxdb queue is starts")
 		buf := make([]*influxdb.Series, 0)
-		for series := range ch {
+		for series := range influxdbCh {
 			debug("go func", *series)
 			buf = append(buf, series)
-			if len(buf) >= conf.SendBuffer {
-				if conf.Udp {
+			if len(buf) >= sendBuffer {
+				if config.IsUDP {
 					if !Conf.DryRun {
 						go client.WriteSeriesOverUDP(buf)
 					}
@@ -52,7 +66,12 @@ func InitInfluxdb(ch chan *influxdb.Series, conf *InfluxDBConfig) error {
 			}
 		}
 	}()
-	return nil
+	return
+}
+
+func NewInfluxdbSender() Sender {
+	influxSender := &InfluxdbSender{}
+	return Sender(influxSender)
 }
 
 type InfluxdbSender struct {
@@ -73,7 +92,7 @@ func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
 }
 
 func (self *InfluxdbSender) Name() string {
-	return "InfluxdbSender"
+	return "influxdb"
 }
 
 func (self *InfluxdbSender) Send(data interface{}) {

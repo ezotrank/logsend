@@ -21,19 +21,7 @@ var (
 	maxprocs      = flag.Int("maxprocs", 0, "max count of cpu")
 	readWholeLog  = flag.Bool("read-whole-log", false, "read whole logs")
 	readOnce      = flag.Bool("read-once", false, "read logs once and exit")
-
-	influxdbHost       = flag.String("influx-host", "", "")
-	influxdbUser       = flag.String("influx-user", "root", "")
-	influxdbPassword   = flag.String("influx-password", "root", "")
-	influxdbDatabase   = flag.String("influx-dbname", "", "")
-	influxdbUdp        = flag.Bool("influx-udp", true, "")
-	influxdbSendBuffer = flag.Int("influx-udp-buffer", 8, "")
-	influxdbSeriesName = flag.String("influx-series-name", "", "")
-
-	statsdHost   = flag.String("statsd-host", "", "")
-	statsdPrefix = flag.String("statsd-prefix", "", "")
-
-	regex = flag.String("regex", "", "")
+	regex         = flag.String("regex", "", "regex rule")
 )
 
 func main() {

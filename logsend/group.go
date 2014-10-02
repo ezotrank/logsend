@@ -5,42 +5,13 @@ import (
 )
 
 type Group struct {
-	Mask  *string `json:"mask"`
-	Rules []*Rule `json:"rules"`
-}
-
-func (self *Group) loadRules() (err error) {
-	for _, rule := range self.Rules {
-		if err = rule.loadRegexp(); err != nil {
-			return err
-		}
-		if rule.Influxdb != nil {
-			influxsender := &InfluxdbSender{}
-			influxsender.SetConfig(rule.Influxdb)
-			rule.senders = append(rule.senders, influxsender)
-		}
-
-		if rule.Statsd != nil {
-			statsdsender := &StatsdSender{}
-			statsdsender.SetConfig(rule.Statsd)
-			rule.senders = append(rule.senders, statsdsender)
-		}
-	}
-	return
+	Mask  *regexp.Regexp
+	Rules []*Rule
 }
 
 type Rule struct {
-	Name     *string `json:"name"`
-	Regexp   *string `json:"regexp"`
-	regexp   *regexp.Regexp
-	Influxdb interface{} `json:"influxdb"`
-	Statsd   interface{} `json:"statsd"`
-	senders  []Sender
-}
-
-func (self *Rule) loadRegexp() (err error) {
-	self.regexp, err = regexp.Compile(*self.Regexp)
-	return
+	regexp  *regexp.Regexp
+	senders []Sender
 }
 
 func (rule *Rule) Match(line *string) interface{} {

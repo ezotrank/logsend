@@ -1,6 +1,7 @@
 package logsend
 
 import (
+	"regexp"
 	"testing"
 )
 
@@ -12,40 +13,36 @@ func benchmarkCheckLineRule(text *string, rule *Rule, b *testing.B) {
 
 func BenchmarkCheckLineRuleNotMatch(b *testing.B) {
 	str := `test word one`
-	regex := ""
+	regex := regexp.MustCompile(``)
 	rule := &Rule{
-		Regexp: &regex,
+		regexp: regex,
 	}
-	rule.loadRegexp()
 	benchmarkCheckLineRule(&str, rule, b)
 }
 
 func BenchmarkCheckLineRuleSimpleMatch(b *testing.B) {
 	str := `test word one`
-	regex := `test word one`
+	regex := regexp.MustCompile(`test word one`)
 	rule := &Rule{
-		Regexp: &regex,
+		regexp: regex,
 	}
-	rule.loadRegexp()
 	benchmarkCheckLineRule(&str, rule, b)
 }
 
 func BenchmarkCheckLineRuleSimpleMatchGroup(b *testing.B) {
 	str := `test word one`
-	regex := `test (?P<test_STRING>\w+) one`
+	regex := regexp.MustCompile(`test (?P<test_STRING>\w+) one`)
 	rule := &Rule{
-		Regexp: &regex,
+		regexp: regex,
 	}
-	rule.loadRegexp()
 	benchmarkCheckLineRule(&str, rule, b)
 }
 
 func BenchmarkCheckLineRuleSimpleMultiMatchGroup(b *testing.B) {
 	str := `test word one`
-	regex := `(?P<test_STRING>\w+) (?P<test1_STRING>\w+) (?P<test2_STRING>\w+)`
+	regex := regexp.MustCompile(`(?P<test_STRING>\w+) (?P<test1_STRING>\w+) (?P<test2_STRING>\w+)`)
 	rule := &Rule{
-		Regexp: &regex,
+		regexp: regex,
 	}
-	rule.loadRegexp()
 	benchmarkCheckLineRule(&str, rule, b)
 }

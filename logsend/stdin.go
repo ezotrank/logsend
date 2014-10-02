@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"flag"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 )
 
 func ProcessStdin() error {
@@ -20,33 +22,40 @@ func ProcessStdin() error {
 			}
 		}
 	} else {
-		influxdbConfg := &InfluxDBConfig{
-			Host:     rawConfig["influx-host"].(flag.Value).String(),
-			User:     rawConfig["influx-user"].(flag.Value).String(),
-			Password: rawConfig["influx-password"].(flag.Value).String(),
-			Database: rawConfig["influx-dbname"].(flag.Value).String(),
+		matchSender := regexp.MustCompile(`(\w+)-host`)
+		var sender Sender
+		for key, val := range rawConfig {
+			match := matchSender.FindStringSubmatch(key)
+			if len(match) == 0 || val.(flag.Value).String() == "" {
+				continue
+			}
+			if register, ok := Conf.registeredSenders[match[1]]; ok {
+				conf := make(map[string]interface{})
+				for key, val := range rawConfig {
+					newKey := key
+					if ok, _ := regexp.MatchString(match[1], key); ok {
+						newKey = strings.Split(key, match[1]+"-")[1]
+					}
+					switch val.(flag.Value).String() {
+					default:
+						conf[newKey] = interface{}(val.(flag.Value).String())
+					case "true", "false":
+						b, err := strconv.ParseBool(val.(flag.Value).String())
+						if err != nil {
+							Conf.Logger.Fatalln(err)
+						}
+						conf[newKey] = interface{}(b)
+					}
+				}
+				register.Init(conf)
+				sender = register.Get()
+				sender.SetConfig(conf)
+				break
+			}
 		}
-		if rawConfig["influx-udp"].(flag.Value).String() == "true" {
-			influxdbConfg.Udp = true
-		} else {
-			influxdbConfg.Udp = false
-		}
-		sendBuffer, _ := strconv.ParseInt(rawConfig["influx-udp-buffer"].(flag.Value).String(), 0, 16)
-		influxdbConfg.SendBuffer = int(sendBuffer)
-		if err := InitInfluxdb(influxdbCh, influxdbConfg); err != nil {
-			Conf.Logger.Fatalln(err)
-		}
-		seriesName := rawConfig["influx-series-name"].(flag.Value).String()
-		regex := rawConfig["regex"].(flag.Value).String()
-		sender := &InfluxdbSender{name: seriesName}
-
 		rule := &Rule{
-			Name:   &seriesName,
-			Regexp: &regex,
-		}
-		rule.senders = []Sender{sender}
-		if err := rule.loadRegexp(); err != nil {
-			Conf.Logger.Fatalln(err)
+			regexp:  regexp.MustCompile(rawConfig["regex"].(flag.Value).String()),
+			senders: []Sender{sender},
 		}
 		rules = append(rules, rule)
 	}
@@ -56,7 +65,6 @@ func ProcessStdin() error {
 		line, err := reader.ReadString('\n')
 
 		if err != nil {
-			// You may check here if err == io.EOF
 			break
 		}
 		checkLineRules(&line, rules)
