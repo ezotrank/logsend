@@ -12,7 +12,7 @@ import (
 func ProcessStdin() error {
 	rules := make([]*Rule, 0)
 	if rawConfig["config"].(flag.Value).String() != "" {
-		groups, err := LoadConfig(rawConfig["config"].(flag.Value).String())
+		groups, err := LoadConfigFromFile(rawConfig["config"].(flag.Value).String())
 		if err != nil {
 			Conf.Logger.Fatalf("can't load config %+v", err)
 		}
@@ -22,6 +22,7 @@ func ProcessStdin() error {
 			}
 		}
 	} else {
+		// TODO: move this to separate method
 		matchSender := regexp.MustCompile(`(\w+)-host`)
 		var sender Sender
 		for key, val := range rawConfig {
@@ -48,7 +49,7 @@ func ProcessStdin() error {
 					}
 				}
 				register.Init(conf)
-				sender = register.Get()
+				sender = register.get()
 				sender.SetConfig(conf)
 				break
 			}

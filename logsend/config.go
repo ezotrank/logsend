@@ -12,14 +12,21 @@ func LoadRawConfig(f *flag.Flag) {
 	rawConfig[f.Name] = f.Value
 }
 
-func LoadConfig(fileName string) (groups []*Group, err error) {
-	config := make(map[string]interface{})
+func LoadConfigFromFile(fileName string) (groups []*Group, err error) {
 	file, err := os.OpenFile(fileName, os.O_RDWR, 0644)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	rawConfig, _ := ioutil.ReadAll(file)
+	rawConfig, err := ioutil.ReadAll(file)
+	if err != nil {
+		Conf.Logger.Fatalln(err)
+	}
+	return LoadConfig(rawConfig)
+}
+
+func LoadConfig(rawConfig []byte) (groups []*Group, err error) {
+	config := make(map[string]interface{})
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
 		return nil, err
 	}
@@ -42,8 +49,12 @@ func LoadConfig(fileName string) (groups []*Group, err error) {
 			}
 			senders := make([]Sender, 0)
 			for senderName, register := range Conf.registeredSenders {
+				// not load rules to not initilized senders
+				if register.initialized != true {
+					continue
+				}
 				if val, ok := groupRule.(map[string]interface{})[senderName].(interface{}); ok {
-					sender := register.Get()
+					sender := register.get()
 					if err = sender.SetConfig(val); err != nil {
 						Conf.Logger.Fatalln(err)
 					}

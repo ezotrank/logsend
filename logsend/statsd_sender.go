@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	Conf.registeredSenders["statsd"] = &SenderRegister{Init: InitStatsd, Get: NewStatsdSender}
+	Conf.registeredSenders["statsd"] = &SenderRegister{init: InitStatsd, get: NewStatsdSender}
 }
 
 func InitStatsd(conf interface{}) {

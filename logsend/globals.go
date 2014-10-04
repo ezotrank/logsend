@@ -8,8 +8,14 @@ import (
 )
 
 type SenderRegister struct {
-	Init func(interface{})
-	Get  func() Sender
+	init        func(interface{})
+	get         func() Sender
+	initialized bool
+}
+
+func (self *SenderRegister) Init(val interface{}) {
+	self.init(val)
+	self.initialized = true
 }
 
 type Configuration struct {
@@ -36,7 +42,7 @@ var Conf = &Configuration{
 }
 
 var (
-	senders   = []Sender{}
+	// senders   = []Sender{}
 	rawConfig = make(map[string]interface{}, 0)
 )
 

@@ -19,7 +19,7 @@ var (
 )
 
 func init() {
-	Conf.registeredSenders["influxdb"] = &SenderRegister{Init: InitInfluxdb, Get: NewInfluxdbSender}
+	Conf.registeredSenders["influxdb"] = &SenderRegister{init: InitInfluxdb, get: NewInfluxdbSender}
 }
 
 func InitInfluxdb(conf interface{}) {
@@ -54,10 +54,11 @@ func InitInfluxdb(conf interface{}) {
 			debug("go func", *series)
 			buf = append(buf, series)
 			if len(buf) >= sendBuffer {
+				if Conf.DryRun {
+					continue
+				}
 				if config.IsUDP {
-					if !Conf.DryRun {
-						go client.WriteSeriesOverUDP(buf)
-					}
+					go client.WriteSeriesOverUDP(buf)
 				} else {
 					go client.WriteSeries(buf)
 				}

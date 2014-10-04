@@ -45,7 +45,7 @@ func main() {
 	logsend.Conf.ReadOnce = *readOnce
 
 	if *check {
-		_, err := logsend.LoadConfig(*config)
+		_, err := logsend.LoadConfigFromFile(*config)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

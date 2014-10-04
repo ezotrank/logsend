@@ -10,7 +10,7 @@ import (
 
 func WatchFiles(dir, configFile string) {
 	// load config
-	groups, err := LoadConfig(configFile)
+	groups, err := LoadConfigFromFile(configFile)
 	if err != nil {
 		Conf.Logger.Fatalf("can't load config %+v", err)
 	}
