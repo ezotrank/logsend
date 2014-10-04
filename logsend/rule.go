@@ -9,6 +9,16 @@ type Group struct {
 	Rules []*Rule
 }
 
+func NewRule(sregexp string) (*Rule, error) {
+	rule := &Rule{}
+	var err error
+	if rule.regexp, err = regexp.Compile(sregexp); err != nil {
+		return rule, err
+	}
+	rule.subexpNames = rule.regexp.SubexpNames()
+	return rule, nil
+}
+
 type Rule struct {
 	regexp      *regexp.Regexp
 	subexpNames []string

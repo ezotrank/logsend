@@ -57,10 +57,11 @@ func ProcessStdin() error {
 				break
 			}
 		}
-		rule := &Rule{
-			regexp:  regexp.MustCompile(rawConfig["regex"].(flag.Value).String()),
-			senders: []Sender{sender},
+		rule, err := NewRule(rawConfig["regex"].(flag.Value).String())
+		if err != nil {
+			panic(err)
 		}
+		rule.senders = []Sender{sender}
 		rules = append(rules, rule)
 	}
 

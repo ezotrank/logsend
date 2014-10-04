@@ -4,4 +4,5 @@ go:
 
 script:
   - make
+  - make test
   - make benchmark

@@ -10,11 +10,11 @@ deploy_config := $(DEPLOY_CONFIG)
 all: deps format test build
 
 deps:
+	go get 'code.google.com/p/go.tools/cmd/vet'
 	go get
 
 test:
-	go get 'code.google.com/p/go.tools/cmd/vet'
-	go test ./logsend
+	go test -v ./logsend
 	go vet ./logsend
 
 benchmark:

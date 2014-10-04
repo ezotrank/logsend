@@ -44,7 +44,7 @@ func LoadConfig(rawConfig []byte) (groups []*Group, err error) {
 			Conf.Logger.Fatalln(err)
 		}
 		for _, groupRule := range groupConfig.(map[string]interface{})["rules"].([]interface{}) {
-			regex, err := regexp.Compile(groupRule.(map[string]interface{})["regexp"].(string))
+			// regex, err := regexp.Compile()
 			if err != nil {
 				Conf.Logger.Fatalln(err)
 			}
@@ -62,11 +62,11 @@ func LoadConfig(rawConfig []byte) (groups []*Group, err error) {
 					senders = append(senders, sender)
 				}
 			}
-			rule := &Rule{
-				regexp:      regex,
-				subexpNames: regex.SubexpNames(),
-				senders:     senders,
+			rule, err := NewRule(groupRule.(map[string]interface{})["regexp"].(string))
+			if err != nil {
+				panic(err)
 			}
+			rule.senders = senders
 			group.Rules = append(group.Rules, rule)
 		}
 		groups = append(groups, group)
