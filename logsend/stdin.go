@@ -23,6 +23,9 @@ func ProcessStdin() error {
 		}
 	} else {
 		// TODO: move this to separate method
+		if rawConfig["regex"].(flag.Value).String() == "" {
+			Conf.Logger.Fatalln("regex not set")
+		}
 		matchSender := regexp.MustCompile(`(\w+)-host`)
 		var sender Sender
 		for key, val := range rawConfig {

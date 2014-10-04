@@ -4,6 +4,7 @@ import (
 	"flag"
 	influxdb "github.com/influxdb/influxdb/client"
 	"net/http"
+	"strings"
 )
 
 // need remove this global variable on all senders
@@ -16,6 +17,7 @@ var (
 	influxdbUdp        = flag.Bool("influxdb-udp", true, "influxdb send via UDP")
 	influxdbSendBuffer = flag.Int("influxdb-send_buffer", 8, "influxdb UDP buffer size")
 	influxdbSeriesName = flag.String("influxdb-name", "", "influxdb series name")
+	influxdbExtraFields = flag.String("influxdb-extra_fields", "", "Example: 'host,HOST service,www' ")
 )
 
 func init() {
@@ -83,14 +85,26 @@ type InfluxdbSender struct {
 	sendCh      chan *influxdb.Series
 }
 
+// TODO: write test
 func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
 	self.name = rawConfig.(map[string]interface{})["name"].(string)
 	if extraFields, ok := rawConfig.(map[string]interface{})["extra_fields"]; ok {
-		for _, pair := range extraFields.([]interface{}) {
-			field := pair.([]interface{})[0].(string)
-			value := pair.([]interface{})[1].(string)
-			self.extraFields = append(self.extraFields, []*string{&field, &value})
+		switch extraFields.(type) {
+		case []interface{}:
+			for _, pair := range extraFields.([]interface{}) {
+				field := pair.([]interface{})[0].(string)
+				value := pair.([]interface{})[1].(string)
+				self.extraFields = append(self.extraFields, []*string{&field, &value})
+			}
+		case string:
+			if extraFields.(string) != "" {
+				for _, keys := range strings.Split(extraFields.(string), " ") {
+					key := strings.Split(keys, ",")
+					self.extraFields = append(self.extraFields, []*string{&key[0], &key[1]})
+				}
+			}
 		}
+
 	}
 	return nil
 }
