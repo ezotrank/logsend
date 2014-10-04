@@ -9,14 +9,14 @@ import (
 
 // need remove this global variable on all senders
 var (
-	influxdbCh         = make(chan *influxdb.Series, 0)
-	influxdbHost       = flag.String("influxdb-host", "", "influxdb host")
-	influxdbUser       = flag.String("influxdb-user", "root", "influxdb user")
-	influxdbPassword   = flag.String("influxdb-password", "root", "influxdb password")
-	influxdbDatabase   = flag.String("influxdb-database", "", "influxdb database")
-	influxdbUdp        = flag.Bool("influxdb-udp", true, "influxdb send via UDP")
-	influxdbSendBuffer = flag.Int("influxdb-send_buffer", 8, "influxdb UDP buffer size")
-	influxdbSeriesName = flag.String("influxdb-name", "", "influxdb series name")
+	influxdbCh          = make(chan *influxdb.Series, 0)
+	influxdbHost        = flag.String("influxdb-host", "", "influxdb host")
+	influxdbUser        = flag.String("influxdb-user", "root", "influxdb user")
+	influxdbPassword    = flag.String("influxdb-password", "root", "influxdb password")
+	influxdbDatabase    = flag.String("influxdb-database", "", "influxdb database")
+	influxdbUdp         = flag.Bool("influxdb-udp", true, "influxdb send via UDP")
+	influxdbSendBuffer  = flag.Int("influxdb-send_buffer", 8, "influxdb UDP buffer size")
+	influxdbSeriesName  = flag.String("influxdb-name", "", "influxdb series name")
 	influxdbExtraFields = flag.String("influxdb-extra_fields", "", "Example: 'host,HOST service,www' ")
 )
 

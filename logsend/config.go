@@ -25,6 +25,7 @@ func LoadConfigFromFile(fileName string) (groups []*Group, err error) {
 	return LoadConfig(rawConfig)
 }
 
+// TODO: test
 func LoadConfig(rawConfig []byte) (groups []*Group, err error) {
 	config := make(map[string]interface{})
 	if err := json.Unmarshal(rawConfig, &config); err != nil {
@@ -62,8 +63,9 @@ func LoadConfig(rawConfig []byte) (groups []*Group, err error) {
 				}
 			}
 			rule := &Rule{
-				regexp:  regex,
-				senders: senders,
+				regexp:      regex,
+				subexpNames: regex.SubexpNames(),
+				senders:     senders,
 			}
 			group.Rules = append(group.Rules, rule)
 		}

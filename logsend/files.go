@@ -12,19 +12,19 @@ func WatchFiles(dir, configFile string) {
 	// load config
 	groups, err := LoadConfigFromFile(configFile)
 	if err != nil {
-		Conf.Logger.Fatalf("can't load config %+v", err)
+		Conf.Logger.Fatalln("can't load config", err)
 	}
 
 	// get list of all files in watch dir
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		Conf.Logger.Fatalf("can't read logs dir: %+v", err)
+		Conf.Logger.Fatalln("can't read logs dir", err)
 	}
 
 	// assign file per group
 	assignedFiles, err := assignFiles(files, groups)
 	if err != nil {
-		Conf.Logger.Fatalln(err)
+		Conf.Logger.Fatalln("can't assign file per group", err)
 	}
 
 	doneCh := make(chan bool)
