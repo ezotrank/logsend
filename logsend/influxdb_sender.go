@@ -19,7 +19,7 @@ var (
 )
 
 func init() {
-	Conf.registeredSenders["influxdb"] = &SenderRegister{init: InitInfluxdb, get: NewInfluxdbSender}
+	RegisterNewSender("influxdb", InitInfluxdb, NewInfluxdbSender)
 }
 
 func InitInfluxdb(conf interface{}) {
@@ -71,13 +71,16 @@ func InitInfluxdb(conf interface{}) {
 }
 
 func NewInfluxdbSender() Sender {
-	influxSender := &InfluxdbSender{}
+	influxSender := &InfluxdbSender{
+		sendCh: influxdbCh,
+	}
 	return Sender(influxSender)
 }
 
 type InfluxdbSender struct {
 	name        string
 	extraFields [][]*string
+	sendCh      chan *influxdb.Series
 }
 
 func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
@@ -119,5 +122,5 @@ func (self *InfluxdbSender) Send(data interface{}) {
 	series.Columns = columns
 	series.Points = [][]interface{}{points}
 
-	influxdbCh <- series
+	self.sendCh <- series
 }

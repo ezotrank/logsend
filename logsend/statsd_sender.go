@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	Conf.registeredSenders["statsd"] = &SenderRegister{init: InitStatsd, get: NewStatsdSender}
+	RegisterNewSender("statsd", InitStatsd, NewStatsdSender)
 }
 
 func InitStatsd(conf interface{}) {
@@ -40,6 +40,7 @@ func InitStatsd(conf interface{}) {
 	}
 	stats := statsd.NewStatsdBuffer(interval, statsdclient)
 	go func() {
+		defer stats.Close()
 		Conf.Logger.Println("Statsd queue is starts")
 		for data := range statsdCh {
 			for op, values := range *data {
@@ -59,13 +60,15 @@ func InitStatsd(conf interface{}) {
 
 			}
 		}
-		defer stats.Close()
+
 	}()
 	return
 }
 
 func NewStatsdSender() Sender {
-	sender := &StatsdSender{}
+	sender := &StatsdSender{
+		sendCh: statsdCh,
+	}
 	return Sender(sender)
 }
 
@@ -73,6 +76,7 @@ type StatsdSender struct {
 	timing    [][]string
 	gauge     [][]string
 	increment []string
+	sendCh    chan *map[string]map[string]int64
 }
 
 func (self *StatsdSender) SetConfig(rawConfig interface{}) error {
@@ -169,7 +173,7 @@ func (self *StatsdSender) Send(data interface{}) {
 			if err != nil {
 				Conf.Logger.Fatalln(err)
 			}
-			statsdCh <- &map[string]map[string]int64{"gauge": {values[0]: intval}}
+			self.sendCh <- &map[string]map[string]int64{"gauge": {values[0]: intval}}
 		}
 	}
 }

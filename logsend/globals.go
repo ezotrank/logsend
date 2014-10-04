@@ -7,6 +7,16 @@ import (
 	"strconv"
 )
 
+func RegisterNewSender(name string, init func(interface{}), get func() Sender) {
+	sender := &SenderRegister{
+		init: init,
+		get:  get,
+	}
+	Conf.registeredSenders[name] = sender
+	Conf.Logger.Println("register sender:", name)
+	return
+}
+
 type SenderRegister struct {
 	init        func(interface{})
 	get         func() Sender
@@ -42,7 +52,6 @@ var Conf = &Configuration{
 }
 
 var (
-	// senders   = []Sender{}
 	rawConfig = make(map[string]interface{}, 0)
 )
 

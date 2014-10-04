@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	Conf.registeredSenders["mysql"] = &SenderRegister{init: InitMysql, get: NewMysqlSender}
+	RegisterNewSender("mysql", InitMysql, NewMysqlSender)
 }
 
 func InitMysql(conf interface{}) {
