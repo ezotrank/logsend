@@ -9,7 +9,12 @@ Logsend is a tool for managing your logs.
 ## What is it
 
 This like [Logstash](http://logstash.net) but more tiny and written by [Golang](http://golang.org).
-At the current time support [Influxdb](http://influxdb.com) and [Statsd](https://github.com/etsy/statsd/) outputs.
+Supported outputs:
+
+* [Influxdb](#influxdb)
+* [Statsd](#statsd)
+* [MySQL](#mysql)
+
 
 ##<a name="instalation"></a>Instalation
 
@@ -59,13 +64,6 @@ Daemonize:
 ```
 logsend -watch-dir=/logs -config=config.json 2> error.log &
 ```
-
-##<a name="supported_outputs"></a> Supported outputs:
-
-* [Influxdb](#influxdb)
-* [Statsd](#statsd)
-* [MySQL](#mysql)
-
 
 ## Benchmarks
 <a name="benchmarks"></a>
