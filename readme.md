@@ -1,4 +1,7 @@
 # Logsend
+
+[![Build Status](https://travis-ci.org/ezotrank/logsend.svg?branch=master)](https://travis-ci.org/ezotrank/logsend)
+
 ---
 Logsend is a tool for managing your logs.
 
@@ -56,6 +59,12 @@ Daemonize:
 ```
 logsend -watch-dir=/logs -config=config.json 2> error.log &
 ```
+
+##<a name="supported_outputs"></a> Supported outputs:
+
+* [Influxdb](#influxdb)
+* [Statsd](#statsd)
+* [MySQL](#mysql)
 
 
 ## Benchmarks
@@ -386,6 +395,165 @@ Description:
 }
 ```
 
-## Status
+## Outputs
 
-[![Build Status](https://travis-ci.org/ezotrank/logsend.svg?branch=master)](https://travis-ci.org/ezotrank/logsend)
+###<a name="influxdb"></a>Influxdb
+
+config.json:
+
+```
+{
+  "influxdb": {
+    "host": "influxdbhost:8086",
+    "user": "root",
+    "password": "root",
+    "database": "logers",
+    "send_buffer": 12
+  },
+  "groups": [
+    {
+        "mask": "some.[0-9]+.log$",
+        "rules": [
+            {
+                "regexp": "\\[W .+ chain_processor.+\\] \\[.+\\] (?P<gate_STRING>\\w+_gate) -> (?P<exec_time_FLOAT>\\d+.\\d+)",
+                "influxdb": {
+                    "name": "gate_response",
+                    "extra_fields": [
+                      ["host", "HOST"]
+                    ]
+                }
+            },
+            {
+                "regexp": "^\\[I .+ web.+\\] (?P<code_INT>\\d+) \\w+ (?P<name_STRING>\/\\S+)(?:\\?.+) \\(.+\\) (?P<resp_time_FLOAT>\\d+.\\d+)ms",
+                "influxdb": {
+                    "name": "adaptors",
+                    "extra_fields": [
+                      ["host", "HOST"]
+                    ]
+                }
+            }
+        ]
+    }
+  ]
+}
+```
+
+another examples how to run:
+
+only one rule:
+
+```
+tail -F some.log| logsend -influxdb-host "influxdbhost:8086" -influxdb-user root -influxdb-password root -influxdb-database logers -influxdb-send_buffer 12 -influxdb-extra_fields 'host,HOST' -regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
+```
+
+using previous config file:
+
+```
+tail -F some.log| logsend -config config.json
+```
+
+###<a name="statsd"></a>Statsd
+
+config.json:
+
+```
+{
+  "statsd": {
+    "host": "statsdhost:8125",
+    "prefix": "test",
+    "interval": "1s"
+  },
+  "groups": [
+    {
+        "mask": "some.[0-9]+.log$",
+        "rules": [
+            {
+                "regexp": "\\[W .+ chain_processor.+\\] \\[.+\\] (?P<gate_STRING>\\w+_gate) -> (?P<exec_time_FLOAT>\\d+.\\d+)",
+                "statsd": {
+                  "timing": [
+                    ["gate_exec_time", "exec_time"]
+                  ]
+                }
+            },
+            {
+                "regexp": "^\\[I .+ web.+\\] (?P<code_INT>\\d+) \\w+ (?P<name_STRING>\/\\S+)(?:\\?.+) \\(.+\\) (?P<resp_time_FLOAT>\\d+.\\d+)ms",
+                "statsd": {
+                  "increment": [
+                  	"adaptors_exec_count"
+                  ]
+                }
+            }
+        ]
+    }
+  ]
+}
+```
+
+another examples how to run:
+
+only one rule:
+
+```
+tail -F some.log| logsend -statsd-host "statsdhost:8125" -statsd-host "statsdhost:8125" -statsd-prefix test -statsd-interval 1s -statsd-timing 'gate_exec_time,exec_time'  -regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
+```
+
+using previous config file:
+
+```
+tail -F some.log| logsend -config config.json
+```
+
+###<a name="mysql"></a>MySQL
+
+config.json:
+
+```
+{
+  "mysql": {
+    "host": "root:toor@/test1?timeout=30s&strict=true"
+  },
+  "groups": [
+    {
+        "mask": "some.[0-9]+.log$",
+        "rules": [
+            {
+                "regexp": "\\[W .+ chain_processor.+\\] \\[.+\\] (?P<gate_STRING>\\w+_gate) -> (?P<exec_time_FLOAT>\\d+.\\d+)",
+                "mysql": {
+                  "query": [
+                    "insert into test1(teststring, testfloat) values('{{.gate}}', {{.exec_time}});",
+                    "insert into test2(teststring, testfloat) values('{{.gate}}', {{.exec_time}});"
+                  ]
+                }
+            },
+            {
+                "regexp": "^\\[I .+ web.+\\] (?P<code_INT>\\d+) \\w+ (?P<name_STRING>\/\\S+)(?:\\?.+) \\(.+\\) (?P<resp_time_FLOAT>\\d+.\\d+)ms",
+                "mysql": {
+                  "query": [
+                    "insert into test1(teststring, testfloat) values('a', 22);"
+                  ]
+                }
+            }
+        ]
+    }
+  ]
+}
+```
+
+another examples how to run:
+
+only one rule:
+
+```
+tail -F some.log| logsend -mysql-host "root:toor@/test1?timeout=30s&strict=true" -mysql-query "insert into test1(teststring, testfloat) values('{{.gate}}', {{.exec_time}});"  -regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
+```
+
+using previous config file:
+
+```
+tail -F some.log| logsend -config config.json
+```
+
+## Tips
+
+* use flag `-debug` for more info
+* use flag `-dry-run` for processing logs but not send to destination
