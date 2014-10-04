@@ -441,7 +441,11 @@ another examples how to run:
 only one rule:
 
 ```
-tail -F some.log| logsend -influxdb-host "influxdbhost:8086" -influxdb-user root -influxdb-password root -influxdb-database logers -influxdb-send_buffer 12 -influxdb-extra_fields 'host,HOST' -regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
+tail -F some.log| logsend -influxdb-host "influxdbhost:8086" 
+-influxdb-user root -influxdb-password root 
+-influxdb-database logers -influxdb-send_buffer 12 
+-influxdb-extra_fields 'host,HOST' 
+-regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
 ```
 
 using previous config file:
@@ -492,7 +496,10 @@ another examples how to run:
 only one rule:
 
 ```
-tail -F some.log| logsend -statsd-host "statsdhost:8125" -statsd-host "statsdhost:8125" -statsd-prefix test -statsd-interval 1s -statsd-timing 'gate_exec_time,exec_time'  -regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
+tail -F some.log| logsend -statsd-host "statsdhost:8125" 
+-statsd-host "statsdhost:8125" -statsd-prefix test 
+-statsd-interval 1s -statsd-timing 'gate_exec_time,exec_time' 
+-regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
 ```
 
 using previous config file:
@@ -542,7 +549,9 @@ another examples how to run:
 only one rule:
 
 ```
-tail -F some.log| logsend -mysql-host "root:toor@/test1?timeout=30s&strict=true" -mysql-query "insert into test1(teststring, testfloat) values('{{.gate}}', {{.exec_time}});"  -regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
+tail -F some.log| logsend -mysql-host "root:toor@/test1?timeout=30s&strict=true" 
+-mysql-query "insert into test1(teststring, testfloat) values('{{.gate}}', {{.exec_time}});" 
+-regex '\[W .+ chain_processor.+\] \[.+\] (?P<gate_STRING>\w+_gate) -> (?P<exec_time_FLOAT>\d+.\d+)'
 ```
 
 using previous config file:
