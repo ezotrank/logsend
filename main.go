@@ -58,11 +58,11 @@ func main() {
 		panic(err)
 	}
 
-	if fi.Size() > 0 {
+	if fi.Mode()&os.ModeNamedPipe == 0 {
+		logsend.WatchFiles(*watchDir, *config)
+	} else {
 		flag.VisitAll(logsend.LoadRawConfig)
 		logsend.ProcessStdin()
-	} else {
-		logsend.WatchFiles(*watchDir, *config)
 	}
 	os.Exit(0)
 }
