@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/andrew-d/go-termutil"
 	"github.com/ezotrank/logsend/logsend"
 	logpkg "log"
 	"os"
@@ -54,11 +53,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	if termutil.Isatty(os.Stdin.Fd()) {
-		logsend.WatchFiles(*watchDir, *config)
-	} else {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+
+	if fi.Size() > 0 {
 		flag.VisitAll(logsend.LoadRawConfig)
 		logsend.ProcessStdin()
+	} else {
+		logsend.WatchFiles(*watchDir, *config)
 	}
 	os.Exit(0)
 }

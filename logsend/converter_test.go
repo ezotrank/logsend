@@ -1,8 +1,8 @@
 package logsend
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func TestPrepareValue(t *testing.T) {
@@ -74,26 +74,25 @@ func TestExtendValue(t *testing.T) {
 
 func BenchmarkPrepareValueString(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		 PrepareValue("test", "word")
+		PrepareValue("test", "word")
 	}
 }
 
 func BenchmarkPrepareValueString2(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		 PrepareValue("test_STRING", "word")
+		PrepareValue("test_STRING", "word")
 	}
 }
 
-
 func BenchmarkPrepareValueInt(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		 PrepareValue("test_INT", "12")
+		PrepareValue("test_INT", "12")
 	}
 }
 
 func BenchmarkPrepareValueFloat(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		 PrepareValue("test_FLOAT", "12.11")
+		PrepareValue("test_FLOAT", "12.11")
 	}
 }
 

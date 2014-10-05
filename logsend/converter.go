@@ -1,22 +1,22 @@
 package logsend
 
 import (
+	"errors"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-	"errors"
 )
 
 type RegisteredConvertes map[string]func(interface{}) (interface{}, error)
 type RegisteredExtendValues map[string]func() (interface{}, error)
 
 var (
-	registeredConvertes = make(RegisteredConvertes, 0)
+	registeredConvertes             = make(RegisteredConvertes, 0)
 	registeredConvertesExtendValues = make(RegisteredExtendValues, 0)
 )
 
-func init(){
+func init() {
 	registeredConvertes["STRING"] = ci2string
 	registeredConvertes["FLOAT"] = ci2float
 	registeredConvertes["INT"] = ci2int
@@ -38,7 +38,7 @@ func ci2string(i interface{}) (o interface{}, err error) {
 func ci2float(i interface{}) (o interface{}, err error) {
 	switch i.(type) {
 	default:
-		err =  errors.New("interface not a float")
+		err = errors.New("interface not a float")
 	case string:
 		var fl float64
 		fl, err = strconv.ParseFloat(i.(string), 64)
@@ -52,7 +52,7 @@ func ci2float(i interface{}) (o interface{}, err error) {
 func ci2int(i interface{}) (o interface{}, err error) {
 	switch i.(type) {
 	default:
-		err =  errors.New("interface not a int")
+		err = errors.New("interface not a int")
 	case string:
 		var fl float64
 		fl, err = strconv.ParseFloat(i.(string), 64)
@@ -78,11 +78,9 @@ func ci2DurationToMillisecond(i interface{}) (o interface{}, err error) {
 	return
 }
 
-
 func revHost() (interface{}, error) {
 	return os.Hostname()
 }
-
 
 func ExtendValue(name *string) (val interface{}, err error) {
 	if fn, ok := registeredConvertesExtendValues[*name]; ok {
