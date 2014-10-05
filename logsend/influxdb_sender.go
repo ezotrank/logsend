@@ -128,7 +128,7 @@ func (self *InfluxdbSender) Send(data interface{}) {
 	}
 
 	for _, extraField := range self.extraFields {
-		if val, err := extendValue(extraField[1]); err == nil {
+		if val, err := ExtendValue(extraField[1]); err == nil {
 			columns = append(columns, *extraField[0])
 			points = append(points, val)
 		}
