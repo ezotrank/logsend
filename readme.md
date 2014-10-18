@@ -36,7 +36,7 @@ curl -L http://logsend.io/get|bash -s /tmp
 As daemon, watching file in directory:
 
 ```
-logsend -watch-dir=/logs -config=config.json
+logsend -config=config.json /logs
 ```
 
 Using PIPE:
@@ -62,7 +62,7 @@ tail -F /logs/*.log |logsend -influx-dbname test -influx-host 'hosta:4444' -rege
 Daemonize:
 
 ```
-logsend -watch-dir=/logs -config=config.json 2> error.log &
+logsend -config=config.json /logs 2> error.log &
 ```
 
 ## Benchmarks
@@ -157,7 +157,7 @@ logsend -watch-dir=/logs -config=config.json 2> error.log &
 ## Starting
 
 ```
-logsend -watch-dir=~/some_logs_folder
+logsend -config config.json /logs
 ```
 
 ## Configuration
@@ -564,3 +564,5 @@ tail -F some.log| logsend -config config.json
 
 * use flag `-debug` for more info
 * use flag `-dry-run` for processing logs but not send to destination
+* use flag `-read-whole-log` for reading whole log file and continue reading
+* use flag `-read-once` better for use with -read-whole-log, just read whole log and exit

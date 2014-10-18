@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	watchDir      = flag.String("watch-dir", "./tmp", "log directories")
+	watchDir      = flag.String("watch-dir", "", "deprecated, simply add the directory as an argument, in the end")
 	config        = flag.String("config", "", "path to config.json file")
 	check         = flag.Bool("check", false, "check config.json")
 	debug         = flag.Bool("debug", false, "turn on debug messages")
@@ -58,8 +58,15 @@ func main() {
 		panic(err)
 	}
 
+	logDirs := make([]string, 0)
+	if len(flag.Args()) > 0 {
+		logDirs = flag.Args()
+	} else {
+		logDirs = append(logDirs, *watchDir)
+	}
+
 	if fi.Mode()&os.ModeNamedPipe == 0 {
-		logsend.WatchFiles(*watchDir, *config)
+		logsend.WatchFiles(logDirs, *config)
 	} else {
 		flag.VisitAll(logsend.LoadRawConfig)
 		logsend.ProcessStdin()

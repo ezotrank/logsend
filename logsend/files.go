@@ -3,12 +3,30 @@ package logsend
 import (
 	"github.com/ActiveState/tail"
 	"github.com/howeyc/fsnotify"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
-func WatchFiles(dir, configFile string) {
+func walkLogDir(dir string) (files []string, err error) {
+	if string(dir[len(dir)-1]) != "/" {
+		dir = dir + "/"
+	}
+	visit := func(path string, f os.FileInfo, err error) error {
+		if f.IsDir() {
+			return nil
+		}
+		abs, err := filepath.Abs(path)
+		if err != nil {
+			Conf.Logger.Fatalln(err)
+		}
+		files = append(files, abs)
+		return nil
+	}
+	err = filepath.Walk(dir, visit)
+	return
+}
+
+func WatchFiles(dirs []string, configFile string) {
 	// load config
 	groups, err := LoadConfigFromFile(configFile)
 	if err != nil {
@@ -16,9 +34,15 @@ func WatchFiles(dir, configFile string) {
 	}
 
 	// get list of all files in watch dir
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		Conf.Logger.Fatalln("can't read logs dir", err)
+	files := make([]string, 0)
+	for _, dir := range dirs {
+		fs, err := walkLogDir(dir)
+		if err != nil {
+			panic(err)
+		}
+		for _, f := range fs {
+			files = append(files, f)
+		}
 	}
 
 	// assign file per group
@@ -27,7 +51,7 @@ func WatchFiles(dir, configFile string) {
 		Conf.Logger.Fatalln("can't assign file per group", err)
 	}
 
-	doneCh := make(chan bool)
+	doneCh := make(chan string)
 	assignedFilesCount := len(assignedFiles)
 
 	for _, file := range assignedFiles {
@@ -36,21 +60,28 @@ func WatchFiles(dir, configFile string) {
 	}
 
 	if Conf.ContinueWatch {
-		go continueWatch(&dir, groups)
-	}
-
-	select {
-	case done := <-doneCh:
-		assignedFilesCount = -1
-		if assignedFilesCount == 0 {
-			debug(done)
-			Conf.Logger.Println("done")
+		for _, dir := range dirs {
+			go continueWatch(&dir, groups)
 		}
-
 	}
+
+	for {
+		select {
+		case fpath := <-doneCh:
+			assignedFilesCount = assignedFilesCount - 1
+			if assignedFilesCount == 0 {
+				Conf.Logger.Printf("finished reading file %+v", fpath)
+				if Conf.ReadOnce {
+					return
+				}
+			}
+
+		}
+	}
+
 }
 
-func assignFiles(files []os.FileInfo, groups []*Group) (outFiles []*File, err error) {
+func assignFiles(files []string, groups []*Group) (outFiles []*File, err error) {
 	for _, group := range groups {
 		var assignedFiles []*File
 		if assignedFiles, err = getFilesByGroup(files, group); err == nil {
@@ -62,6 +93,23 @@ func assignFiles(files []os.FileInfo, groups []*Group) (outFiles []*File, err er
 		}
 	}
 	return
+}
+
+func getFilesByGroup(allFiles []string, group *Group) ([]*File, error) {
+	files := make([]*File, 0)
+	regex := *group.Mask
+	for _, f := range allFiles {
+		if !regex.MatchString(filepath.Base(f)) {
+			continue
+		}
+		file, err := NewFile(f)
+		if err != nil {
+			return files, err
+		}
+		file.group = group
+		files = append(files, file)
+	}
+	return files, nil
 }
 
 func continueWatch(dir *string, groups []*Group) {
@@ -78,8 +126,8 @@ func continueWatch(dir *string, groups []*Group) {
 			select {
 			case ev := <-watcher.Event:
 				if ev.IsCreate() {
-					files := make([]os.FileInfo, 0)
-					file, err := os.Stat(ev.Name)
+					files := make([]string, 0)
+					file, err := filepath.Abs(ev.Name)
 					if err != nil {
 						Conf.Logger.Printf("can't get file %+v", err)
 						continue
@@ -104,30 +152,15 @@ func continueWatch(dir *string, groups []*Group) {
 	watcher.Close()
 }
 
-func getFilesByGroup(allFiles []os.FileInfo, group *Group) ([]*File, error) {
-	files := make([]*File, 0)
-	regex := *group.Mask
-	for _, f := range allFiles {
-		if !regex.MatchString(f.Name()) {
-			continue
-		}
-		filepath := filepath.Join(Conf.WatchDir, f.Name())
-		file, err := NewFile(filepath)
-		if err != nil {
-			return files, err
-		}
-		file.group = group
-		files = append(files, file)
-	}
-	return files, nil
-}
-
 func NewFile(fpath string) (*File, error) {
 	file := &File{}
 	var err error
-	if Conf.ReadWholeLog {
-		Conf.Logger.Println("read whole logs")
+	if Conf.ReadWholeLog && Conf.ReadOnce {
+		Conf.Logger.Printf("read whole file once %+v", fpath)
 		file.Tail, err = tail.TailFile(fpath, tail.Config{})
+	} else if Conf.ReadWholeLog {
+		Conf.Logger.Printf("read whole file and continue %+v", fpath)
+		file.Tail, err = tail.TailFile(fpath, tail.Config{Follow: true, ReOpen: true})
 	} else {
 		seekInfo := &tail.SeekInfo{Offset: 0, Whence: 2}
 		file.Tail, err = tail.TailFile(fpath, tail.Config{Follow: true, ReOpen: true, Location: seekInfo})
@@ -138,12 +171,12 @@ func NewFile(fpath string) (*File, error) {
 type File struct {
 	Tail   *tail.Tail
 	group  *Group
-	doneCh chan bool
+	doneCh chan string
 }
 
 func (self *File) tail() {
 	Conf.Logger.Printf("start tailing %+v", self.Tail.Filename)
-	defer func() { self.doneCh <- true }()
+	defer func() { self.doneCh <- self.Tail.Filename }()
 	for line := range self.Tail.Lines {
 		checkLineRules(&line.Text, self.group.Rules)
 	}
