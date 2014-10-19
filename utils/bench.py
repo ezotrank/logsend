@@ -83,7 +83,7 @@ def bench(logs_count=1, config=config):
         with open(log_file_name + str(x), "a") as myfile:
             myfile.write(msg*lines_count)
 
-    os.system("time %s %s" % (binary, run_params))
+    os.system("/bin/bash -c 'time %s %s'" % (binary, run_params))
     os.system("echo '\n'")
     os.system("rm -f %s %s" % (config_file, log_file_name + '*'))
 
