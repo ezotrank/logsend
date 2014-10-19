@@ -566,3 +566,20 @@ tail -F some.log| logsend -config config.json
 * use flag `-dry-run` for processing logs but not send to destination
 * use flag `-read-whole-log` for reading whole log file and continue reading
 * use flag `-read-once` better for use with -read-whole-log, just read whole log and exit
+
+## Monit
+
+```
+check process logsend pidfile /home/user/logsend/logsend.pid
+    start program = "/bin/bash -c '/usr/local/bin/logsend -config /home/user/rails_app/current/config/logsend.json -log=/home/user/logsend/logsend.log /home/user/rails_app/shared/log & echo $! > /home/user/logsend/logsend.pid'"
+       as uid user and gid user
+    stop program = "/bin/bash -c '/bin/kill `cat /home/user/logsend/logsend.pid`'"
+       as uid user and gid user with timeout 5 seconds
+    if totalmemory is greater than 64 MB for 5 cycles then restart
+    if totalcpu is greater than 60% for 5 cycles then restart
+    if children is greater than 64 for 5 cycles then restart
+
+
+check file logsend_restart path /home/user/rails_app/current/config/logsend.json
+    if changed timestamp then exec "/bin/bash -c '/bin/kill `cat /home/user/logsend/logsend.pid`'"
+```
