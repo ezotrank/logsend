@@ -2,12 +2,13 @@ import os
 import time
 
 lines_count = 250000
-log_file_name = 'tmp/test.log'
-config_file = 'config.json'
+log_dir = './bench_logs'
+log_file_name = log_dir + '/test.log'
+config_file = log_dir + '/config.json'
 logsend_binary = 'logsend'
 msg = "test string one\n"
 binary="go run main.go"
-run_params = "-watch-dir=./tmp -config=config.json -dry-run -read-whole-log &>/dev/null"
+run_params = "-config=%s -dry-run -read-whole-log -read-once %s &>/dev/null" % (config_file, log_dir)
 
 config="""
 {
@@ -74,7 +75,7 @@ config2="""
 """
 
 def bench(logs_count=1, config=config):
-    os.system("rm -f %s %s" % (config_file, log_file_name + '*'))
+    os.system("rm -rf %s; mkdir -p %s" % (log_dir, log_dir))
     with open(config_file, "w") as myfile:
         myfile.write(config)
 
