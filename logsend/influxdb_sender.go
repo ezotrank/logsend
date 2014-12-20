@@ -3,18 +3,17 @@ package logsend
 import (
 	"flag"
 	influxdb "github.com/influxdb/influxdb/client"
-	"net/http"
 	"strings"
 )
 
 // need remove this global variable on all senders
 var (
 	influxdbCh          = make(chan *influxdb.Series, 0)
-	influxdbHost        = flag.String("influxdb-host", "", "influxdb host")
+	influxdbHost        = flag.String("influxdb-host", "localhost:8086", "influxdb host")
 	influxdbUser        = flag.String("influxdb-user", "root", "influxdb user")
 	influxdbPassword    = flag.String("influxdb-password", "root", "influxdb password")
 	influxdbDatabase    = flag.String("influxdb-database", "", "influxdb database")
-	influxdbUdp         = flag.Bool("influxdb-udp", true, "influxdb send via UDP")
+	influxdbUdp         = flag.Bool("influxdb-udp", false, "influxdb send via UDP")
 	influxdbSendBuffer  = flag.Int("influxdb-send_buffer", 8, "influxdb UDP buffer size")
 	influxdbSeriesName  = flag.String("influxdb-name", "", "influxdb series name")
 	influxdbExtraFields = flag.String("influxdb-extra_fields", "", "Example: 'host,HOST service,www' ")
@@ -26,23 +25,18 @@ func init() {
 
 func InitInfluxdb(conf interface{}) {
 	config := &influxdb.ClientConfig{
-		Host:       conf.(map[string]interface{})["host"].(string),
-		HttpClient: http.DefaultClient,
+		Host: conf.(map[string]interface{})["host"].(string),
 	}
 
-	if val, ok := conf.(map[string]interface{})["udp"]; ok {
-		config.IsUDP = val.(bool)
-	} else {
-		config.Username = conf.(map[string]interface{})["user"].(string)
-		config.Password = conf.(map[string]interface{})["password"].(string)
-		config.Database = conf.(map[string]interface{})["database"].(string)
-	}
+	config.IsUDP = conf.(map[string]interface{})["udp"].(bool)
+	config.Username = conf.(map[string]interface{})["user"].(string)
+	config.Password = conf.(map[string]interface{})["password"].(string)
+	config.Database = conf.(map[string]interface{})["database"].(string)
 
 	sendBuffer := 0
 	if val, ok := conf.(map[string]interface{})["send_buffer"]; ok {
 		sendBuffer = i2int(val)
 	}
-
 	client, err := influxdb.NewClient(config)
 	if err != nil {
 		Conf.Logger.Fatalln(err)
@@ -62,13 +56,21 @@ func InitInfluxdb(conf interface{}) {
 				if config.IsUDP {
 					go client.WriteSeriesOverUDP(buf)
 				} else {
-					go client.WriteSeries(buf)
+					go writeSeries(client, buf)
 				}
 				// clean buffer
 				buf = make([]*influxdb.Series, 0)
 			}
 		}
 	}()
+	return
+}
+
+func writeSeries(client *influxdb.Client, buf []*influxdb.Series) {
+	err := client.WriteSeries(buf)
+	if err != nil {
+		Conf.Logger.Printf("influxdb can't write series %+v", err)
+	}
 	return
 }
 
