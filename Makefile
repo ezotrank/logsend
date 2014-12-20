@@ -1,7 +1,7 @@
 # Examples:
 # DEPLOY_USER=user DEPLOY_CONFIG=some_config DEPLOY_TO="host1 host2" make deploy
 
-.PHONY: all nuke build deploy deps test
+.PHONY: all nuke build install deploy deps test
 
 deploy_user := $(DEPLOY_USER)
 deploy_target := $(DEPLOY_TO)
@@ -24,8 +24,12 @@ format:
 	gofmt -w ./logsend ./main.go
 
 build:
+	mkdir -p builds
+	go build -o builds/logsend ./main.go
 	go build -o $$GOPATH/bin/logsend ./main.go
-	GOOS=linux go build -o $$GOPATH/bin/logsend_linux ./main.go
+
+install:
+	cp -rf builds/logsend /usr/local/bin
 
 deploy: build deploy_copy deploy_update_config deploy_restart
 
