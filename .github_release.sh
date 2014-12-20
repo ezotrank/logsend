@@ -13,9 +13,13 @@ if [ -z "$TOKEN" ]; then
 fi
 
 make || exit 1
+make release
 
-gzip -9 -f -k $GOPATH/bin/logsend_linux || exit 1
-gzip -9 -f -k $GOPATH/bin/logsend || exit 1
+LINUX_BIN_PATH=builds/logsend
+DARWIN_BIN_PATH=builds/logsend_darwin
+
+gzip -9 -f $LINUX_BIN_PATH || exit 1
+gzip -9 -f $DARWIN_BIN_PATH || exit 1
 
 
 response=`curl --data "{\\"tag_name\\": \\"$TAG\\",\\"target_commitish\\": \\"master\\",\\"name\\": \\"$TAG\\",\\"body\\": \\"Release of version $TAG\\", \\"draft\\": false,\\"prerelease\\": false}" \
@@ -30,7 +34,5 @@ if [ -z "$release_id" ]; then
   exit 1
 fi
 
-curl -X POST -H 'Content-Type: application/x-gzip' --data-binary @$GOPATH/bin/logsend_linux.gz "https://uploads.github.com/repos/ezotrank/logsend/releases/$release_id/assets?name=logsend_linux.gz&access_token=$TOKEN"
-curl -X POST -H 'Content-Type: application/x-gzip' --data-binary @$GOPATH/bin/logsend.gz "https://uploads.github.com/repos/ezotrank/logsend/releases/$release_id/assets?name=logsend_darwin.gz&access_token=$TOKEN"
-
-rm -f $GOPATH/bin/logsend.gz $GOPATH/bin/logsend_linux.gz
+curl -X POST -H 'Content-Type: application/x-gzip' --data-binary @$LINUX_BIN_PATH.gz "https://uploads.github.com/repos/ezotrank/logsend/releases/$release_id/assets?name=logsend.gz&access_token=$TOKEN"
+curl -X POST -H 'Content-Type: application/x-gzip' --data-binary @$DARWIN_BIN_PATH.gz "https://uploads.github.com/repos/ezotrank/logsend/releases/$release_id/assets?name=logsend_darwin.gz&access_token=$TOKEN"

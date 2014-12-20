@@ -5,7 +5,7 @@ set -o errtrace
 set -o errexit
 
 
-LINUX_BIN_NAME="logsend_linux"
+LINUX_BIN_NAME="logsend"
 DARWIN_BIN_NAME="logsend_darwin"
 REPO="https://github.com/ezotrank/logsend"
 TMP_DIR="/tmp"
