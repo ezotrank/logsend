@@ -15,7 +15,7 @@ deps:
 
 test:
 	go test -v ./logsend
-	go vet ./logsend
+	go tool vet ./logsend
 
 benchmark:
 	go test -run=XXX -bench=. -benchmem -benchtime 1s ./logsend
