@@ -8,10 +8,11 @@ Logsend is high-performance tool for processing logs.
 
 ## What is it
 
-This like [Logstash](http://logstash.net) but more tiny and written by [Golang](http://golang.org).
+This like [Logstash](http://logstash.net) but tiny and written by [Golang](http://golang.org).
 Supported outputs:
 
 * [Influxdb](#influxdb)
+* [NewRelic](#newrelic)
 * [Statsd](#statsd)
 * [MySQL](#mysql)
 
@@ -254,6 +255,70 @@ Some times we need added not captured params, and for this purpose we used `extr
 }
 ```
 
+**NewRelic configuration**
+
+Description:
+
+`"host"` - hostname when started logsend
+`"name"` - application name
+`"key"` - api key for NewRelic
+`"duration"` - seconds, how often send report to New Relic
+`"tmpl"` - metric name
+
+***<a name="newrelic_config"></a>config.json***
+
+```
+{
+	"newrelic": {
+        "host": "host1",
+        "key": "0000023231232231",
+        "name": "project1"
+    },
+    "groups": [
+        {
+            "mask": "access.log$",
+            "rules": [
+                {
+                    "newrelic": {
+                        "duration": 10,
+                        "tmpl": "Component/Project1/NginxRequestsCode{{.code}}"
+                    },
+                    "regexp": "\\d+\\.\\d+\\.\\d+\\.\\d+ .+ \\[.+\\] \"\\w+ \\S+ \\S+\" (?P<code>\\d+)"
+                },
+                {
+                    "newrelic": {
+                        "duration": 10,
+                        "tmpl": "Component/Project1/OpenPageType-{{.pageType}}"
+                    },
+                    "regexp": "\\d+\\.\\d+\\.\\d+\\.\\d+ .+ \\[.+\\] \"\\w+ /(?P<pageType>hotels|cities|countries)/\\S+ \\S+\" 200"
+                }
+            ]
+        },
+        {
+            "mask": "production.log$",
+            "rules": [
+                {
+                    "newrelic": {
+                        "duration": 10,
+                        "tmpl": "Component/Project1/RailsRequestsCode{{.code}}"
+                    },
+                    "regexp": "^Completed (?P<code>\\d+)"
+                },
+                {
+                    "newrelic": {
+                        "duration": 10,
+                        "tmpl": "Component/Project1/RailsResponseTime{{.NAME}}"
+                    },
+                    "regexp": "^Completed \\d+ .+ in \\d+\\.\\d+ms \\(Views: (?P<RenderViews_FLOAT>\\d+\\.\\d+)ms .+ ActiveRecord: (?P<ActiveRecord_FLOAT>\\d+\\.\\d+)ms"
+                }
+            ]
+        }
+    ]
+}
+   
+```
+
+
 **Statsd configuration**
 
 Description:
@@ -261,6 +326,10 @@ Description:
 `["search.prepare_proposal_time", "prepare_proposals"]` - set `prepare_proposals` to `search.prepare_proposal_time` as timing
 `"search.prepare_proposals"` - increment by by this metric
 `["search.keys_count", "prepare_proposals"]` - set non integer metrics
+
+![image](https://dl.dropboxusercontent.com/u/423640/newrelic_add_graph.png)
+![image](https://dl.dropboxusercontent.com/u/423640/newrelic_all_plugins.png)
+![image](https://dl.dropboxusercontent.com/u/423640/newrelic_overall.png)
 
 ***<a name="statsd_config"></a>config.json***
 
