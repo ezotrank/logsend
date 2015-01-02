@@ -15,13 +15,14 @@ deps:
 
 test:
 	go test -v ./logsend
-	go tool vet ./logsend
 
 benchmark:
 	go test -run=XXX -bench=. -benchmem -benchtime 1s ./logsend
 
 format:
 	gofmt -w ./logsend ./main.go
+	go tool vet -all=true ./logsend 
+	go tool vet -all=true ./main.go
 
 build:
 	mkdir -p builds

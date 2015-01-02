@@ -27,7 +27,6 @@ type Rule struct {
 
 func (rule *Rule) Match(line *string) interface{} {
 	matches := rule.regexp.FindStringSubmatch(*line)
-
 	if len(matches) == 0 {
 		return nil
 	}
@@ -35,7 +34,6 @@ func (rule *Rule) Match(line *string) interface{} {
 	if len(matches) <= 1 {
 		return true
 	}
-
 	// TODO: cache subexnames
 	out := make(map[string]interface{})
 	for i, value := range matches[1:] {
