@@ -115,7 +115,10 @@ func (self *NewRelicSender) SetConfig(rawConfig interface{}) error {
 	if val, ok := rawConfig.(map[string]interface{})["tmpl"]; !ok {
 		panic("newrelic SetConfig `tmpl` not present in config")
 	} else {
-		self.tmpl, _ = template.New("query").Parse(val.(string))
+		if self.tmpl, err = template.New("query").Parse(val.(string)); err != nil {
+			Conf.Logger.Printf("newrelic can't parse template %+v err: %v", val, err)
+			panic()
+		}
 	}
 	if val, ok := rawConfig.(map[string]interface{})["duration"]; !ok {
 		panic("newrelic SetConfig `duration` not present in config")
@@ -168,25 +171,29 @@ func (self *NewRelicSender) send(metrics map[string][]float64) {
 	}
 	breport, err := json.Marshal(report)
 	if err != nil {
-		panic(err)
+		Conf.Logger.Printf("newrelic can't marshal report %v", err)
+		return
 	}
+	if Conf.DryRun {
+		debug("newrelic payload: ", string(breport))
+		return
+	}
+
 	req, err := http.NewRequest("POST", "https://platform-api.newrelic.com/platform/v1/metrics", bytes.NewBuffer(breport))
 	if err != nil {
-		panic(err)
+		Conf.Logger.Printf("newrelic can't make request %v", err)
+		return
 	}
 	req.Header.Set("X-License-Key", self.config.Key)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	debug("newrelic payload: ", string(breport))
-	if !Conf.DryRun {
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			panic(err)
-		}
-		defer resp.Body.Close()
-		debug("newrelic response code", resp.Status)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		Conf.Logger.Printf("newrelic can't send payload to NewRelic %v", err)
 	}
+	defer resp.Body.Close()
+	debug("newrelic response code", resp.Status)
 }
 
 func (self *NewRelicSender) Name() string {
