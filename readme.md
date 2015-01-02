@@ -259,13 +259,17 @@ Some times we need added not captured params, and for this purpose we used `extr
 
 Description:
 
-`"host"` - hostname when started logsend
-`"name"` - application name
-`"key"` - api key for NewRelic
-`"duration"` - seconds, how often send report to New Relic
-`"tmpl"` - metric name
+- `"host"` - hostname when started logsend
+- `"name"` - application name
+- `"key"` - api key for NewRelic
+- `"duration"` - seconds, how often send report to New Relic
+- `"tmpl"` - metric name
 
-***<a name="newrelic_config"></a>config.json***
+![image](https://dl.dropboxusercontent.com/u/423640/newrelic_overall.png)
+![image](https://dl.dropboxusercontent.com/u/423640/newrelic_add_graph.png)
+![image](https://dl.dropboxusercontent.com/u/423640/newrelic_all_plugins.png)
+
+***<a name="newrelic"></a>config.json***
 
 ```
 {
@@ -326,10 +330,6 @@ Description:
 `["search.prepare_proposal_time", "prepare_proposals"]` - set `prepare_proposals` to `search.prepare_proposal_time` as timing
 `"search.prepare_proposals"` - increment by by this metric
 `["search.keys_count", "prepare_proposals"]` - set non integer metrics
-
-![image](https://dl.dropboxusercontent.com/u/423640/newrelic_add_graph.png)
-![image](https://dl.dropboxusercontent.com/u/423640/newrelic_all_plugins.png)
-![image](https://dl.dropboxusercontent.com/u/423640/newrelic_overall.png)
 
 ***<a name="statsd_config"></a>config.json***
 
