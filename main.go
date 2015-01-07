@@ -8,6 +8,10 @@ import (
 	"os"
 )
 
+const (
+	VERSION = "1.7.1"
+)
+
 var (
 	watchDir      = flag.String("watch-dir", "", "deprecated, simply add the directory as an argument, in the end")
 	config        = flag.String("config", "", "path to config.json file")
@@ -21,10 +25,16 @@ var (
 	readWholeLog  = flag.Bool("read-whole-log", false, "read whole logs")
 	readOnce      = flag.Bool("read-once", false, "read logs once and exit")
 	regex         = flag.String("regex", "", "regex rule")
+	version       = flag.Bool("version", false, "show version number")
 )
 
 func main() {
 	flag.Parse()
+
+	if *version {
+		fmt.Printf("logsend version %v\n", VERSION)
+		os.Exit(0)
+	}
 
 	if *logFile != "" {
 		file, err := os.OpenFile(*logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
