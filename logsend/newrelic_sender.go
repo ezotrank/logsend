@@ -3,6 +3,7 @@ package logsend
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/golang/glog"
 	"net/http"
 	"sync"
 	"text/template"
@@ -112,12 +113,12 @@ func sumMetrics(metrics []float64) (sum float64) {
 }
 
 func (self *NewRelicSender) SetConfig(rawConfig interface{}) error {
+	var err error
 	if val, ok := rawConfig.(map[string]interface{})["tmpl"]; !ok {
 		panic("newrelic SetConfig `tmpl` not present in config")
 	} else {
 		if self.tmpl, err = template.New("query").Parse(val.(string)); err != nil {
-			Conf.Logger.Printf("newrelic can't parse template %+v err: %v", val, err)
-			panic()
+			glog.Fatalf("newrelic can't parse template %+v err: %s", val, err)
 		}
 	}
 	if val, ok := rawConfig.(map[string]interface{})["duration"]; !ok {
@@ -171,17 +172,16 @@ func (self *NewRelicSender) send(metrics map[string][]float64) {
 	}
 	breport, err := json.Marshal(report)
 	if err != nil {
-		Conf.Logger.Printf("newrelic can't marshal report %v", err)
+		glog.Infof("newrelic can't marshal report %v", err)
 		return
 	}
 	if Conf.DryRun {
-		debug("newrelic payload: ", string(breport))
 		return
 	}
 
 	req, err := http.NewRequest("POST", "https://platform-api.newrelic.com/platform/v1/metrics", bytes.NewBuffer(breport))
 	if err != nil {
-		Conf.Logger.Printf("newrelic can't make request %v", err)
+		glog.Infof("newrelic can't make request %v", err)
 		return
 	}
 	req.Header.Set("X-License-Key", self.config.Key)
@@ -190,10 +190,9 @@ func (self *NewRelicSender) send(metrics map[string][]float64) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		Conf.Logger.Printf("newrelic can't send payload to NewRelic %v", err)
+		glog.Infof("newrelic can't send payload to NewRelic %v", err)
 	}
 	defer resp.Body.Close()
-	debug("newrelic response code", resp.Status)
 }
 
 func (self *NewRelicSender) Name() string {
@@ -216,7 +215,7 @@ func (self *NewRelicSender) Send(data interface{}) {
 		for _, name := range timeGroupNames {
 			buf := new(bytes.Buffer)
 			if err := self.tmpl.Execute(buf, map[string]string{"NAME": name}); err != nil {
-				Conf.Logger.Println("newrelic template error ", err, data)
+				glog.Infoln("newrelic template error ", err, data)
 				return
 			}
 			str := buf.String()
@@ -230,7 +229,7 @@ func (self *NewRelicSender) Send(data interface{}) {
 	} else {
 		buf := new(bytes.Buffer)
 		if err := self.tmpl.Execute(buf, data); err != nil {
-			Conf.Logger.Println("newrelic template error ", err, data)
+			glog.Infoln("newrelic template error ", err, data)
 			return
 		}
 		str := buf.String()

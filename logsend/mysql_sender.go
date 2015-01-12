@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang/glog"
 	"strings"
 	"text/template"
 )
@@ -30,7 +31,7 @@ func InitMysql(conf interface{}) {
 
 	go func() {
 		defer db.Close()
-		Conf.Logger.Println("mysql queue is starts")
+		glog.Infoln("mysql queue is starts")
 		for query := range mysqlCh {
 
 			err = db.Ping()
@@ -38,7 +39,6 @@ func InitMysql(conf interface{}) {
 				panic(err.Error()) // proper error handling instead of panic in your app
 			}
 
-			debug("mysql exec query: ", *query)
 			// TODO: exec query with transaction support
 			if Conf.DryRun {
 				continue
@@ -46,7 +46,7 @@ func InitMysql(conf interface{}) {
 
 			trx, err := db.Begin()
 			if err != nil {
-				Conf.Logger.Println("mysql init transaction ", err, *query)
+				glog.Infoln("mysql init transaction ", err, *query)
 			}
 
 			for _, q := range strings.Split(*query, ";") {
@@ -60,7 +60,7 @@ func InitMysql(conf interface{}) {
 			}
 			if err != nil {
 				trx.Rollback()
-				Conf.Logger.Println("rollback ", err, *query)
+				glog.Infoln("rollback ", err, *query)
 				continue
 			}
 			trx.Commit()
@@ -95,7 +95,6 @@ func (self *MysqlSender) SetConfig(rawConfig interface{}) error {
 		query = rawConfig.(map[string]interface{})["query"].(string)
 	}
 	self.tmpl, _ = template.New("query").Parse(query)
-	debug("set config to mysql sender")
 	return nil
 }
 
@@ -103,7 +102,7 @@ func (self *MysqlSender) Send(data interface{}) {
 	buf := new(bytes.Buffer)
 	err := self.tmpl.Execute(buf, data)
 	if err != nil {
-		Conf.Logger.Println("mysql template error ", err, data)
+		glog.Infoln("mysql template error ", err, data)
 	}
 	str := buf.String()
 	self.sendCh <- &str

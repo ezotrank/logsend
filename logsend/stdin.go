@@ -3,6 +3,7 @@ package logsend
 import (
 	"bufio"
 	"flag"
+	"github.com/golang/glog"
 	"os"
 	"regexp"
 	"strconv"
@@ -14,7 +15,7 @@ func ProcessStdin() error {
 	if rawConfig["config"].(flag.Value).String() != "" {
 		groups, err := LoadConfigFromFile(rawConfig["config"].(flag.Value).String())
 		if err != nil {
-			Conf.Logger.Fatalf("can't load config %+v", err)
+			glog.Fatalf("can't load config %+v", err)
 		}
 		for _, group := range groups {
 			for _, rule := range group.Rules {
@@ -24,7 +25,7 @@ func ProcessStdin() error {
 	} else {
 		// TODO: move this to separate method
 		if rawConfig["regex"].(flag.Value).String() == "" {
-			Conf.Logger.Fatalln("regex not set")
+			glog.Fatalln("regex not set")
 		}
 		matchSender := regexp.MustCompile(`(\w+)-host`)
 		var sender Sender
@@ -46,7 +47,7 @@ func ProcessStdin() error {
 					case "true", "false":
 						b, err := strconv.ParseBool(val.(flag.Value).String())
 						if err != nil {
-							Conf.Logger.Fatalln(err)
+							glog.Fatalln(err)
 						}
 						conf[newKey] = interface{}(b)
 					}

@@ -2,6 +2,7 @@ package logsend
 
 import (
 	"flag"
+	"github.com/golang/glog"
 	influxdb "github.com/influxdb/influxdb/client"
 	"strings"
 )
@@ -14,7 +15,7 @@ var (
 	influxdbPassword    = flag.String("influxdb-password", "root", "influxdb password")
 	influxdbDatabase    = flag.String("influxdb-database", "", "influxdb database")
 	influxdbUdp         = flag.Bool("influxdb-udp", false, "influxdb send via UDP")
-	influxdbSendBuffer  = flag.Int("influxdb-send_buffer", 8, "influxdb UDP buffer size")
+	influxdbSendBuffer  = flag.Int("influxdb-send_buffer", 1, "influxdb UDP buffer size")
 	influxdbSeriesName  = flag.String("influxdb-name", "", "influxdb series name")
 	influxdbExtraFields = flag.String("influxdb-extra_fields", "", "Example: 'host,HOST service,www' ")
 )
@@ -28,10 +29,27 @@ func InitInfluxdb(conf interface{}) {
 		Host: conf.(map[string]interface{})["host"].(string),
 	}
 
-	config.IsUDP = conf.(map[string]interface{})["udp"].(bool)
-	config.Username = conf.(map[string]interface{})["user"].(string)
-	config.Password = conf.(map[string]interface{})["password"].(string)
-	config.Database = conf.(map[string]interface{})["database"].(string)
+	if val, ok := conf.(map[string]interface{})["udp"]; ok {
+		config.IsUDP = val.(bool)
+	}
+
+	if val, ok := conf.(map[string]interface{})["user"]; ok {
+		config.Username = val.(string)
+	} else if !config.IsUDP {
+		glog.Fatalln("you must set `user`")
+	}
+
+	if val, ok := conf.(map[string]interface{})["password"]; ok {
+		config.Password = val.(string)
+	} else if !config.IsUDP {
+		glog.Fatalln("you must set `password`")
+	}
+
+	if val, ok := conf.(map[string]interface{})["database"]; ok {
+		config.Database = val.(string)
+	} else if !config.IsUDP {
+		glog.Fatalln("you must set `database`")
+	}
 
 	sendBuffer := 0
 	if val, ok := conf.(map[string]interface{})["send_buffer"]; ok {
@@ -39,15 +57,17 @@ func InitInfluxdb(conf interface{}) {
 	}
 	client, err := influxdb.NewClient(config)
 	if err != nil {
-		Conf.Logger.Fatalln(err)
+		glog.Fatalf("can't create influxdb client err: %s\n", err)
 	}
 	client.DisableCompression()
 
 	go func() {
-		Conf.Logger.Println("Influxdb queue is starts")
+		glog.Info("Influxdb queue is starts")
 		buf := make([]*influxdb.Series, 0)
 		for series := range influxdbCh {
-			debug("go func", *series)
+			if glog.V(2) {
+				glog.Infof("influxdb recieve series from influxdbCh: %+v", *series)
+			}
 			buf = append(buf, series)
 			if len(buf) >= sendBuffer {
 				if Conf.DryRun {
@@ -69,7 +89,7 @@ func InitInfluxdb(conf interface{}) {
 func writeSeries(client *influxdb.Client, buf []*influxdb.Series) {
 	err := client.WriteSeries(buf)
 	if err != nil {
-		Conf.Logger.Printf("influxdb can't write series %+v", err)
+		glog.Errorf("can't send series to db err: %s\n", err)
 	}
 	return
 }

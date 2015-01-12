@@ -2,6 +2,7 @@ package logsend
 
 import (
 	"flag"
+	"github.com/golang/glog"
 	"github.com/quipo/statsd"
 	"strings"
 	"time"
@@ -36,24 +37,21 @@ func InitStatsd(conf interface{}) {
 	statsdclient.CreateSocket()
 	interval, err := time.ParseDuration(_interval)
 	if err != nil {
-		Conf.Logger.Fatalf("can't parse interval %+v", err)
+		glog.Fatalf("can't parse interval %+v", err)
 	}
 	stats := statsd.NewStatsdBuffer(interval, statsdclient)
 	go func() {
 		defer stats.Close()
-		Conf.Logger.Println("Statsd queue is starts")
+		glog.Infoln("Statsd queue is starts")
 		for data := range statsdCh {
 			for op, values := range *data {
 				for key, val := range values {
 					switch op {
 					case "increment":
-						debug("send incr", key, val)
 						go stats.Incr(key, val)
 					case "timing":
-						debug("send timing", key, val)
 						go stats.Timing(key, val)
 					case "gauge":
-						debug("send gauge", key, val)
 						go stats.Gauge(key, val)
 					}
 				}
@@ -94,7 +92,6 @@ func (self *StatsdSender) SetConfig(rawConfig interface{}) error {
 				}
 			}
 		}
-		debug(self.timing)
 	}
 
 	if val, ok := rawConfig.(map[string]interface{})["increment"]; ok {
@@ -110,7 +107,6 @@ func (self *StatsdSender) SetConfig(rawConfig interface{}) error {
 				}
 			}
 		}
-		debug("set increment", self.increment)
 	}
 
 	if val, ok := rawConfig.(map[string]interface{})["gauge"]; ok {
@@ -127,7 +123,6 @@ func (self *StatsdSender) SetConfig(rawConfig interface{}) error {
 				}
 			}
 		}
-		debug("set gauge", self.gauge)
 	}
 	return nil
 }
@@ -155,10 +150,10 @@ func (self *StatsdSender) Send(data interface{}) {
 		if val, ok := data.(map[string]interface{})[values[1]]; ok {
 			intval, err := interfaceToInt64(val)
 			if err != nil {
-				Conf.Logger.Printf("can't convert to int64 %+v", err)
+				glog.Infof("can't convert to int64 %+v", err)
 			}
 			if err != nil {
-				Conf.Logger.Fatalln(err)
+				glog.Fatalln(err)
 			}
 			statsdCh <- &map[string]map[string]int64{"timing": {values[0]: intval}}
 		}
@@ -168,10 +163,10 @@ func (self *StatsdSender) Send(data interface{}) {
 		if val, ok := data.(map[string]interface{})[values[1]]; ok {
 			intval, err := interfaceToInt64(val)
 			if err != nil {
-				Conf.Logger.Printf("can't convert to int64 %+v", err)
+				glog.Infof("can't convert to int64 %+v", err)
 			}
 			if err != nil {
-				Conf.Logger.Fatalln(err)
+				glog.Fatalln(err)
 			}
 			self.sendCh <- &map[string]map[string]int64{"gauge": {values[0]: intval}}
 		}

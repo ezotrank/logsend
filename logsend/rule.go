@@ -1,6 +1,7 @@
 package logsend
 
 import (
+	"github.com/golang/glog"
 	"regexp"
 )
 
@@ -39,7 +40,7 @@ func (rule *Rule) Match(line *string) interface{} {
 	for i, value := range matches[1:] {
 		key, val, err := PrepareValue(rule.subexpNames[i+1], value)
 		if err != nil {
-			Conf.Logger.Printf("can't prepareValue with %+v and %+v have err %+v", rule.subexpNames[i+1], value, err)
+			glog.Infof("can't prepareValue with %+v and %+v have err %+v", rule.subexpNames[i+1], value, err)
 			return nil
 		}
 		out[key] = val

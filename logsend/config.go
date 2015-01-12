@@ -3,6 +3,7 @@ package logsend
 import (
 	"encoding/json"
 	"flag"
+	"github.com/golang/glog"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -20,7 +21,7 @@ func LoadConfigFromFile(fileName string) (groups []*Group, err error) {
 	defer file.Close()
 	rawConfig, err := ioutil.ReadAll(file)
 	if err != nil {
-		Conf.Logger.Fatalln(err)
+		glog.Fatalf("can't load config err: %s\n", err)
 	}
 	return LoadConfig(rawConfig)
 }
@@ -41,12 +42,12 @@ func LoadConfig(rawConfig []byte) (groups []*Group, err error) {
 	for _, groupConfig := range config["groups"].([]interface{}) {
 		group := &Group{}
 		if group.Mask, err = regexp.Compile(groupConfig.(map[string]interface{})["mask"].(string)); err != nil {
-			Conf.Logger.Fatalln(err)
+			glog.Fatalln(err)
 		}
 		for _, groupRule := range groupConfig.(map[string]interface{})["rules"].([]interface{}) {
 			// regex, err := regexp.Compile()
 			if err != nil {
-				Conf.Logger.Fatalln(err)
+				glog.Fatalln(err)
 			}
 			senders := make([]Sender, 0)
 			for senderName, register := range Conf.registeredSenders {
@@ -57,7 +58,7 @@ func LoadConfig(rawConfig []byte) (groups []*Group, err error) {
 				if val, ok := groupRule.(map[string]interface{})[senderName].(interface{}); ok {
 					sender := register.get()
 					if err = sender.SetConfig(val); err != nil {
-						Conf.Logger.Fatalln(err)
+						glog.Fatalln(err)
 					}
 					senders = append(senders, sender)
 				}
