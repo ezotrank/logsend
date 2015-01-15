@@ -71,14 +71,11 @@ func InitInfluxdb(conf interface{}) {
 			buf = append(buf, series)
 			if len(buf) >= sendBuffer {
 				if Conf.DryRun {
-					continue
-				}
-				if config.IsUDP {
-					go client.WriteSeriesOverUDP(buf)
+					glog.Infof("influxdb dry-run send series: %+V", buf)
+					buf = make([]*influxdb.Series, 0)
 				} else {
-					go writeSeries(client, buf)
+					go writeSeries(client, config, buf)
 				}
-				// clean buffer
 				buf = make([]*influxdb.Series, 0)
 			}
 		}
@@ -86,9 +83,15 @@ func InitInfluxdb(conf interface{}) {
 	return
 }
 
-func writeSeries(client *influxdb.Client, buf []*influxdb.Series) {
-	err := client.WriteSeries(buf)
-	if err != nil {
+func writeSeries(client *influxdb.Client, config *influxdb.ClientConfig, buf []*influxdb.Series) {
+	if glog.V(1) {
+		glog.Infof("influxdb send series: %+V", buf)
+	}
+	if config.IsUDP {
+		client.WriteSeriesOverUDP(buf)
+		return
+	}
+	if err := client.WriteSeries(buf); err != nil {
 		glog.Errorf("can't send series to db err: %s\n", err)
 	}
 	return
