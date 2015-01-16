@@ -33,7 +33,7 @@ install:
 	cp -rf builds/logsend /usr/local/bin
 
 release:
-	mkdir -p builds
+	mkdir -p builds && rm -rf builds/*
 	go build -o builds/logsend ./main.go
 	GOOS=darwin go build -o builds/logsend_darwin ./main.go
 
