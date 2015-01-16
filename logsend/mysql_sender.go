@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"flag"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/golang/glog"
 	"strings"
 	"text/template"
 )
@@ -31,7 +31,7 @@ func InitMysql(conf interface{}) {
 
 	go func() {
 		defer db.Close()
-		glog.Infoln("mysql queue is starts")
+		fmt.Println("mysql queue is starts")
 		for query := range mysqlCh {
 
 			err = db.Ping()
@@ -46,7 +46,7 @@ func InitMysql(conf interface{}) {
 
 			trx, err := db.Begin()
 			if err != nil {
-				glog.Infoln("mysql init transaction ", err, *query)
+				fmt.Println("mysql init transaction ", err, *query)
 			}
 
 			for _, q := range strings.Split(*query, ";") {
@@ -60,7 +60,7 @@ func InitMysql(conf interface{}) {
 			}
 			if err != nil {
 				trx.Rollback()
-				glog.Infoln("rollback ", err, *query)
+				fmt.Println("rollback ", err, *query)
 				continue
 			}
 			trx.Commit()
@@ -102,7 +102,7 @@ func (self *MysqlSender) Send(data interface{}) {
 	buf := new(bytes.Buffer)
 	err := self.tmpl.Execute(buf, data)
 	if err != nil {
-		glog.Infoln("mysql template error ", err, data)
+		fmt.Println("mysql template error ", err, data)
 	}
 	str := buf.String()
 	self.sendCh <- &str

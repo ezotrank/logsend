@@ -2,7 +2,7 @@ package logsend
 
 import (
 	"flag"
-	"github.com/golang/glog"
+	"fmt"
 	influxdb "github.com/influxdb/influxdb/client"
 	"strings"
 )
@@ -36,19 +36,19 @@ func InitInfluxdb(conf interface{}) {
 	if val, ok := conf.(map[string]interface{})["user"]; ok {
 		config.Username = val.(string)
 	} else if !config.IsUDP {
-		glog.Fatalln("you must set `user`")
+		fmt.Println("you must set `user`")
 	}
 
 	if val, ok := conf.(map[string]interface{})["password"]; ok {
 		config.Password = val.(string)
 	} else if !config.IsUDP {
-		glog.Fatalln("you must set `password`")
+		fmt.Println("you must set `password`")
 	}
 
 	if val, ok := conf.(map[string]interface{})["database"]; ok {
 		config.Database = val.(string)
 	} else if !config.IsUDP {
-		glog.Fatalln("you must set `database`")
+		fmt.Println("you must set `database`")
 	}
 
 	sendBuffer := 0
@@ -57,21 +57,21 @@ func InitInfluxdb(conf interface{}) {
 	}
 	client, err := influxdb.NewClient(config)
 	if err != nil {
-		glog.Fatalf("can't create influxdb client err: %s\n", err)
+		fmt.Printf("can't create influxdb client err: %s\n", err)
 	}
 	client.DisableCompression()
 
 	go func() {
-		glog.Info("Influxdb queue is starts")
+		fmt.Println("Influxdb queue is starts")
 		buf := make([]*influxdb.Series, 0)
 		for series := range influxdbCh {
-			if glog.V(2) {
-				glog.Infof("influxdb recieve series from influxdbCh: %+v", *series)
+			if false {
+				fmt.Printf("influxdb recieve series from influxdbCh: %+v", *series)
 			}
 			buf = append(buf, series)
 			if len(buf) >= sendBuffer {
 				if Conf.DryRun {
-					glog.Infof("influxdb dry-run send series: %+V", buf)
+					fmt.Printf("influxdb dry-run send series: %+v", buf)
 					buf = make([]*influxdb.Series, 0)
 				} else {
 					go writeSeries(client, config, buf)
@@ -84,15 +84,15 @@ func InitInfluxdb(conf interface{}) {
 }
 
 func writeSeries(client *influxdb.Client, config *influxdb.ClientConfig, buf []*influxdb.Series) {
-	if glog.V(1) {
-		glog.Infof("influxdb send series: %+V", buf)
+	if true {
+		fmt.Printf("influxdb send series: %+v", buf)
 	}
 	if config.IsUDP {
 		client.WriteSeriesOverUDP(buf)
 		return
 	}
 	if err := client.WriteSeries(buf); err != nil {
-		glog.Errorf("can't send series to db err: %s\n", err)
+		fmt.Printf("can't send series to db err: %s\n", err)
 	}
 	return
 }

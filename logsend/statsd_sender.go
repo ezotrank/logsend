@@ -2,7 +2,7 @@ package logsend
 
 import (
 	"flag"
-	"github.com/golang/glog"
+	"fmt"
 	"github.com/quipo/statsd"
 	"strings"
 	"time"
@@ -37,12 +37,12 @@ func InitStatsd(conf interface{}) {
 	statsdclient.CreateSocket()
 	interval, err := time.ParseDuration(_interval)
 	if err != nil {
-		glog.Fatalf("can't parse interval %+v", err)
+		fmt.Printf("can't parse interval %+v", err)
 	}
 	stats := statsd.NewStatsdBuffer(interval, statsdclient)
 	go func() {
 		defer stats.Close()
-		glog.Infoln("Statsd queue is starts")
+		fmt.Println("Statsd queue is starts")
 		for data := range statsdCh {
 			for op, values := range *data {
 				for key, val := range values {
@@ -150,10 +150,10 @@ func (self *StatsdSender) Send(data interface{}) {
 		if val, ok := data.(map[string]interface{})[values[1]]; ok {
 			intval, err := interfaceToInt64(val)
 			if err != nil {
-				glog.Infof("can't convert to int64 %+v", err)
+				fmt.Printf("can't convert to int64 %+v", err)
 			}
 			if err != nil {
-				glog.Fatalln(err)
+				fmt.Println(err)
 			}
 			statsdCh <- &map[string]map[string]int64{"timing": {values[0]: intval}}
 		}
@@ -163,10 +163,10 @@ func (self *StatsdSender) Send(data interface{}) {
 		if val, ok := data.(map[string]interface{})[values[1]]; ok {
 			intval, err := interfaceToInt64(val)
 			if err != nil {
-				glog.Infof("can't convert to int64 %+v", err)
+				fmt.Printf("can't convert to int64 %+v", err)
 			}
 			if err != nil {
-				glog.Fatalln(err)
+				fmt.Println(err)
 			}
 			self.sendCh <- &map[string]map[string]int64{"gauge": {values[0]: intval}}
 		}
