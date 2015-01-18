@@ -3,7 +3,7 @@ package logsend
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	log "github.com/ezotrank/logger"
 	"net/http"
 	"sync"
 	"text/template"
@@ -118,7 +118,7 @@ func (self *NewRelicSender) SetConfig(rawConfig interface{}) error {
 		panic("newrelic SetConfig `tmpl` not present in config")
 	} else {
 		if self.tmpl, err = template.New("query").Parse(val.(string)); err != nil {
-			fmt.Printf("newrelic can't parse template %+v err: %s", val, err)
+			log.Infof("newrelic can't parse template %+v err: %s", val, err)
 		}
 	}
 	if val, ok := rawConfig.(map[string]interface{})["duration"]; !ok {
@@ -172,7 +172,7 @@ func (self *NewRelicSender) send(metrics map[string][]float64) {
 	}
 	breport, err := json.Marshal(report)
 	if err != nil {
-		fmt.Printf("newrelic can't marshal report %v", err)
+		log.Infof("newrelic can't marshal report %v", err)
 		return
 	}
 	if Conf.DryRun {
@@ -181,7 +181,7 @@ func (self *NewRelicSender) send(metrics map[string][]float64) {
 
 	req, err := http.NewRequest("POST", "https://platform-api.newrelic.com/platform/v1/metrics", bytes.NewBuffer(breport))
 	if err != nil {
-		fmt.Printf("newrelic can't make request %v", err)
+		log.Infof("newrelic can't make request %v", err)
 		return
 	}
 	req.Header.Set("X-License-Key", self.config.Key)
@@ -190,7 +190,7 @@ func (self *NewRelicSender) send(metrics map[string][]float64) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("newrelic can't send payload to NewRelic %v", err)
+		log.Infof("newrelic can't send payload to NewRelic %v", err)
 	}
 	defer resp.Body.Close()
 }
@@ -215,7 +215,7 @@ func (self *NewRelicSender) Send(data interface{}) {
 		for _, name := range timeGroupNames {
 			buf := new(bytes.Buffer)
 			if err := self.tmpl.Execute(buf, map[string]string{"NAME": name}); err != nil {
-				fmt.Println("newrelic template error ", err, data)
+				log.Infoln("newrelic template error ", err, data)
 				return
 			}
 			str := buf.String()
@@ -229,7 +229,7 @@ func (self *NewRelicSender) Send(data interface{}) {
 	} else {
 		buf := new(bytes.Buffer)
 		if err := self.tmpl.Execute(buf, data); err != nil {
-			fmt.Println("newrelic template error ", err, data)
+			log.Infoln("newrelic template error ", err, data)
 			return
 		}
 		str := buf.String()

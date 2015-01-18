@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"flag"
-	"fmt"
+	log "github.com/ezotrank/logger"
 	_ "github.com/go-sql-driver/mysql"
 	"strings"
 	"text/template"
@@ -31,7 +31,7 @@ func InitMysql(conf interface{}) {
 
 	go func() {
 		defer db.Close()
-		fmt.Println("mysql queue is starts")
+		log.Infoln("mysql queue is starts")
 		for query := range mysqlCh {
 
 			err = db.Ping()
@@ -46,7 +46,7 @@ func InitMysql(conf interface{}) {
 
 			trx, err := db.Begin()
 			if err != nil {
-				fmt.Println("mysql init transaction ", err, *query)
+				log.Infoln("mysql init transaction ", err, *query)
 			}
 
 			for _, q := range strings.Split(*query, ";") {
@@ -60,7 +60,7 @@ func InitMysql(conf interface{}) {
 			}
 			if err != nil {
 				trx.Rollback()
-				fmt.Println("rollback ", err, *query)
+				log.Infoln("rollback ", err, *query)
 				continue
 			}
 			trx.Commit()
@@ -102,7 +102,7 @@ func (self *MysqlSender) Send(data interface{}) {
 	buf := new(bytes.Buffer)
 	err := self.tmpl.Execute(buf, data)
 	if err != nil {
-		fmt.Println("mysql template error ", err, data)
+		log.Infoln("mysql template error ", err, data)
 	}
 	str := buf.String()
 	self.sendCh <- &str

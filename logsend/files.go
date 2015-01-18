@@ -1,8 +1,8 @@
 package logsend
 
 import (
-	"fmt"
 	"github.com/ActiveState/tail"
+	log "github.com/ezotrank/logger"
 	"github.com/howeyc/fsnotify"
 	"os"
 	"path/filepath"
@@ -18,7 +18,7 @@ func walkLogDir(dir string) (files []string, err error) {
 		}
 		abs, err := filepath.Abs(path)
 		if err != nil {
-			fmt.Println(err)
+			log.Infoln(err)
 		}
 		files = append(files, abs)
 		return nil
@@ -31,7 +31,7 @@ func WatchFiles(dirs []string, configFile string) {
 	// load config
 	groups, err := LoadConfigFromFile(configFile)
 	if err != nil {
-		fmt.Println("can't load config", err)
+		log.Infoln("can't load config", err)
 	}
 
 	// get list of all files in watch dir
@@ -49,7 +49,7 @@ func WatchFiles(dirs []string, configFile string) {
 	// assign file per group
 	assignedFiles, err := assignFiles(files, groups)
 	if err != nil {
-		fmt.Println("can't assign file per group", err)
+		log.Infoln("can't assign file per group", err)
 	}
 
 	doneCh := make(chan string)
@@ -71,7 +71,7 @@ func WatchFiles(dirs []string, configFile string) {
 		case fpath := <-doneCh:
 			assignedFilesCount = assignedFilesCount - 1
 			if assignedFilesCount == 0 {
-				fmt.Printf("finished reading file %+v", fpath)
+				log.Infof("finished reading file %+v", fpath)
 				if Conf.ReadOnce {
 					return
 				}
@@ -116,7 +116,7 @@ func getFilesByGroup(allFiles []string, group *Group) ([]*File, error) {
 func continueWatch(dir *string, groups []*Group) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Println(err)
+		log.Infoln(err)
 	}
 
 	done := make(chan bool)
@@ -130,21 +130,21 @@ func continueWatch(dir *string, groups []*Group) {
 					files := make([]string, 0)
 					file, err := filepath.Abs(ev.Name)
 					if err != nil {
-						fmt.Printf("can't get file %+v", err)
+						log.Infof("can't get file %+v", err)
 						continue
 					}
 					files = append(files, file)
 					assignFiles(files, groups)
 				}
 			case err := <-watcher.Error:
-				fmt.Println("error:", err)
+				log.Infoln("error:", err)
 			}
 		}
 	}()
 
 	err = watcher.Watch(*dir)
 	if err != nil {
-		fmt.Println(err)
+		log.Infoln(err)
 	}
 
 	<-done
@@ -157,10 +157,10 @@ func NewFile(fpath string) (*File, error) {
 	file := &File{}
 	var err error
 	if Conf.ReadWholeLog && Conf.ReadOnce {
-		fmt.Printf("read whole file once %+v", fpath)
+		log.Infof("read whole file once %+v", fpath)
 		file.Tail, err = tail.TailFile(fpath, tail.Config{})
 	} else if Conf.ReadWholeLog {
-		fmt.Printf("read whole file and continue %+v", fpath)
+		log.Infof("read whole file and continue %+v", fpath)
 		file.Tail, err = tail.TailFile(fpath, tail.Config{Follow: true, ReOpen: true})
 	} else {
 		seekInfo := &tail.SeekInfo{Offset: 0, Whence: 2}
@@ -176,7 +176,7 @@ type File struct {
 }
 
 func (self *File) tail() {
-	fmt.Printf("start tailing %+v", self.Tail.Filename)
+	log.Infof("start tailing %+v", self.Tail.Filename)
 	defer func() { self.doneCh <- self.Tail.Filename }()
 	for line := range self.Tail.Lines {
 		checkLineRules(&line.Text, self.group.Rules)
@@ -185,18 +185,19 @@ func (self *File) tail() {
 
 func checkLineRule(line *string, rule *Rule) {
 	if false {
-		fmt.Printf("get line: %s\n", *line)
+		log.Infof("get line: %s\n", *line)
 	}
 	match := rule.Match(line)
 	if match != nil {
 		if false {
-			fmt.Printf("match regexp and line %q  %q", rule.regexp, *line)
+			log.Infof("match regexp and line %q  %q", rule.regexp, *line)
 		}
 		rule.send(match)
 	}
 }
 
 func checkLineRules(line *string, rules []*Rule) {
+	log.Verbosef("get line: %s", *line)
 	for _, rule := range rules {
 		checkLineRule(line, rule)
 	}

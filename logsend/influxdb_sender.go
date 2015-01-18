@@ -2,7 +2,7 @@ package logsend
 
 import (
 	"flag"
-	"fmt"
+	log "github.com/ezotrank/logger"
 	influxdb "github.com/influxdb/influxdb/client"
 	"strings"
 )
@@ -36,19 +36,19 @@ func InitInfluxdb(conf interface{}) {
 	if val, ok := conf.(map[string]interface{})["user"]; ok {
 		config.Username = val.(string)
 	} else if !config.IsUDP {
-		fmt.Println("you must set `user`")
+		log.Infoln("you must set `user`")
 	}
 
 	if val, ok := conf.(map[string]interface{})["password"]; ok {
 		config.Password = val.(string)
 	} else if !config.IsUDP {
-		fmt.Println("you must set `password`")
+		log.Infoln("you must set `password`")
 	}
 
 	if val, ok := conf.(map[string]interface{})["database"]; ok {
 		config.Database = val.(string)
 	} else if !config.IsUDP {
-		fmt.Println("you must set `database`")
+		log.Infoln("you must set `database`")
 	}
 
 	sendBuffer := 0
@@ -57,21 +57,21 @@ func InitInfluxdb(conf interface{}) {
 	}
 	client, err := influxdb.NewClient(config)
 	if err != nil {
-		fmt.Printf("can't create influxdb client err: %s\n", err)
+		log.Infof("can't create influxdb client err: %s\n", err)
 	}
 	client.DisableCompression()
 
 	go func() {
-		fmt.Println("Influxdb queue is starts")
+		log.Infoln("Influxdb queue is starts")
 		buf := make([]*influxdb.Series, 0)
 		for series := range influxdbCh {
 			if false {
-				fmt.Printf("influxdb recieve series from influxdbCh: %+v", *series)
+				log.Infof("influxdb recieve series from influxdbCh: %+v", *series)
 			}
 			buf = append(buf, series)
 			if len(buf) >= sendBuffer {
 				if Conf.DryRun {
-					fmt.Printf("influxdb dry-run send series: %+v", buf)
+					log.Infof("influxdb dry-run send series: %+v", buf)
 					buf = make([]*influxdb.Series, 0)
 				} else {
 					go writeSeries(client, config, buf)
@@ -84,15 +84,13 @@ func InitInfluxdb(conf interface{}) {
 }
 
 func writeSeries(client *influxdb.Client, config *influxdb.ClientConfig, buf []*influxdb.Series) {
-	if true {
-		fmt.Printf("influxdb send series: %+v", buf)
-	}
+	log.Debugf("influxdb send series: %+v", buf)
 	if config.IsUDP {
 		client.WriteSeriesOverUDP(buf)
 		return
 	}
 	if err := client.WriteSeries(buf); err != nil {
-		fmt.Printf("can't send series to db err: %s\n", err)
+		log.Warnf("can't send series to db err: %s\n", err)
 	}
 	return
 }

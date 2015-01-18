@@ -3,7 +3,7 @@ package logsend
 import (
 	"bufio"
 	"flag"
-	"fmt"
+	log "github.com/ezotrank/logger"
 	"os"
 	"regexp"
 	"strconv"
@@ -15,7 +15,7 @@ func ProcessStdin() error {
 	if rawConfig["config"].(flag.Value).String() != "" {
 		groups, err := LoadConfigFromFile(rawConfig["config"].(flag.Value).String())
 		if err != nil {
-			fmt.Printf("can't load config %+v", err)
+			log.Infof("can't load config %+v", err)
 		}
 		for _, group := range groups {
 			for _, rule := range group.Rules {
@@ -25,7 +25,7 @@ func ProcessStdin() error {
 	} else {
 		// TODO: move this to separate method
 		if rawConfig["regex"].(flag.Value).String() == "" {
-			fmt.Println("regex not set")
+			log.Infoln("regex not set")
 		}
 		matchSender := regexp.MustCompile(`(\w+)-host`)
 		var sender Sender
@@ -47,7 +47,7 @@ func ProcessStdin() error {
 					case "true", "false":
 						b, err := strconv.ParseBool(val.(flag.Value).String())
 						if err != nil {
-							fmt.Println(err)
+							log.Infoln(err)
 						}
 						conf[newKey] = interface{}(b)
 					}
