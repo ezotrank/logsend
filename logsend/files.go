@@ -52,6 +52,9 @@ func WatchFiles(dirs []string, configFile string) {
 		log.Infoln("can't assign file per group", err)
 	}
 
+	if len(assignedFiles) < 1 {
+		log.Fatalln("Not found log files in directory, sorry...")
+	}
 	doneCh := make(chan string)
 	assignedFilesCount := len(assignedFiles)
 
