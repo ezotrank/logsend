@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	// VERSION definition
 	VERSION = "1.7.1"
 )
 
@@ -68,7 +69,7 @@ func main() {
 		panic(err)
 	}
 
-	logDirs := make([]string, 0)
+	var logDirs []string
 	if len(flag.Args()) > 0 {
 		logDirs = flag.Args()
 	} else {

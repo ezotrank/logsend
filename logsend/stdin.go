@@ -9,8 +9,9 @@ import (
 	"strings"
 )
 
+// ProcessStdin read data from input for process it
 func ProcessStdin() error {
-	rules := make([]*Rule, 0)
+	var rules []*Rule
 	if rawConfig["config"].(flag.Value).String() != "" {
 		groups, err := LoadConfigFromFile(rawConfig["config"].(flag.Value).String())
 		if err != nil {

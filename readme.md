@@ -319,7 +319,7 @@ Description:
         }
     ]
 }
-   
+
 ```
 
 
@@ -652,3 +652,7 @@ check process logsend pidfile /home/user/logsend/logsend.pid
 check file logsend_restart path /home/user/rails_app/current/config/logsend.json
     if changed timestamp then exec "/bin/bash -c '/bin/kill `cat /home/user/logsend/logsend.pid`'"
 ```
+
+## License
+
+Logsend is released under the [MIT License](http://www.opensource.org/licenses/MIT).
