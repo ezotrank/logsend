@@ -31,7 +31,7 @@ func WatchFiles(dirs []string, configFile string) {
 	// load config
 	groups, err := LoadConfigFromFile(configFile)
 	if err != nil {
-		log.Infoln("can't load config", err)
+		log.Fatalln("can't load config", err)
 	}
 
 	// get list of all files in watch dir
