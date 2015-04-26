@@ -38,7 +38,7 @@ func main() {
 	if *check {
 		_, err := logsend.LoadConfigFromFile(*config)
 		if err != nil {
-			fmt.Errorf("config check err: %s", err)
+			fmt.Printf("config check err: %s", err)
 			os.Exit(1)
 		}
 		fmt.Println("ok")
@@ -52,7 +52,7 @@ func main() {
 
 	if fi.Mode()&os.ModeNamedPipe == 0 {
 		if len(flag.Args()) < 1 {
-			fmt.Errorf("you forget specify watch directories")
+			fmt.Printf("you forget specify watch directories")
 		}
 		logsend.WatchFiles(flag.Args(), *config)
 	} else {
