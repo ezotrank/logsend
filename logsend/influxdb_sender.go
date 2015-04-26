@@ -1,26 +1,23 @@
 package logsend
 
 import (
-	"encoding/json"
 	"flag"
 	log "github.com/ezotrank/logger"
-	client "github.com/influxdb/influxdb/client"
-	"net/url"
+	influxdb "gopkg.in/influxdb/influxdb.v0/client"
 	"strings"
-	"time"
 )
 
-// need remove this global variables on all senders
+// need remove this global variable on all senders
 var (
-	influxCh              = make(chan *SendPoint, 0)
-	influxHost            = flag.String("influx-host", "http://localhost:8086", "client host")
-	influxUser            = flag.String("influx-user", "root", "client user")
-	influxPassword        = flag.String("influx-password", "root", "client password")
-	influxDatabase        = flag.String("influx-database", "", "client database")
-	influxSendBuffer      = flag.Int("influx-buffer", 1, "buffer size")
-	influxSeriesName      = flag.String("influx-name", "", "client series name")
-	influxRetentionPolicy = flag.String("influx-retention-policy", "default", "retantion policy")
-	influxExtraFields     = flag.String("influx-extra_fields", "", "Example: 'host,HOST service,www'")
+	influxdbCh          = make(chan *influxdb.Series, 0)
+	influxdbHost        = flag.String("influxdb-host", "localhost:8086", "influxdb host")
+	influxdbUser        = flag.String("influxdb-user", "root", "influxdb user")
+	influxdbPassword    = flag.String("influxdb-password", "root", "influxdb password")
+	influxdbDatabase    = flag.String("influxdb-database", "", "influxdb database")
+	influxdbUdp         = flag.Bool("influxdb-udp", false, "influxdb send via UDP")
+	influxdbSendBuffer  = flag.Int("influxdb-send_buffer", 1, "influxdb UDP buffer size")
+	influxdbSeriesName  = flag.String("influxdb-name", "", "influxdb series name")
+	influxdbExtraFields = flag.String("influxdb-extra_fields", "", "Example: 'host,HOST service,www' ")
 )
 
 func init() {
@@ -28,160 +25,92 @@ func init() {
 }
 
 func InitInfluxdb(conf interface{}) {
-	config := &client.Config{}
+	config := &influxdb.ClientConfig{
+		Host: conf.(map[string]interface{})["host"].(string),
+	}
 
-	if val, ok := conf.(map[string]interface{})["host"]; ok {
-		surl := val.(string)
-		if surl[:3] != "http" {
-			surl = "http://" + surl
-		}
-		u, err := url.Parse(surl)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		config.URL = *u
-	} else {
-		log.Fatalln("you must set `host`")
+	if val, ok := conf.(map[string]interface{})["udp"]; ok {
+		config.IsUDP = val.(bool)
 	}
 
 	if val, ok := conf.(map[string]interface{})["user"]; ok {
 		config.Username = val.(string)
-	} else {
-		log.Fatalln("you must set `user`")
+	} else if !config.IsUDP {
+		log.Infoln("you must set `user`")
 	}
 
 	if val, ok := conf.(map[string]interface{})["password"]; ok {
 		config.Password = val.(string)
-	} else {
-		log.Fatalln("you must set `password`")
-	}
-
-	influxClient, err := client.NewClient(*config)
-	if err != nil {
-		log.Fatalln("can't create client client err: %s\n", err)
+	} else if !config.IsUDP {
+		log.Infoln("you must set `password`")
 	}
 
 	if val, ok := conf.(map[string]interface{})["database"]; ok {
-		*influxDatabase = val.(string)
+		config.Database = val.(string)
+	} else if !config.IsUDP {
+		log.Infoln("you must set `database`")
 	}
+
+	sendBuffer := 0
+	if val, ok := conf.(map[string]interface{})["send_buffer"]; ok {
+		sendBuffer = i2int(val)
+	}
+	client, err := influxdb.NewClient(config)
+	if err != nil {
+		log.Infof("can't create influxdb client err: %s\n", err)
+	}
+	client.DisableCompression()
 
 	go func() {
 		log.Infoln("Influxdb queue is starts")
-		buf := make(map[string][]SendPoint, 0)
-		for lastPoint := range influxCh {
-			key := lastPoint.sender.key()
-			if val, ok := buf[lastPoint.sender.key()]; ok {
-				buf[key] = append(val, *lastPoint)
-			} else {
-				buf[key] = []SendPoint{*lastPoint}
+		buf := make([]*influxdb.Series, 0)
+		for series := range influxdbCh {
+			if false {
+				log.Infof("influxdb recieve series from influxdbCh: %+v", *series)
 			}
-			if len(buf[key]) >= lastPoint.sender.bufLen {
-				go writeSeries(influxClient, buf[key])
-				buf[key] = make([]SendPoint, 0)
+			buf = append(buf, series)
+			if len(buf) >= sendBuffer {
+				if Conf.DryRun {
+					log.Infof("influxdb dry-run send series: %+v", buf)
+					buf = make([]*influxdb.Series, 0)
+				} else {
+					go writeSeries(client, config, buf)
+				}
+				buf = make([]*influxdb.Series, 0)
 			}
 		}
 	}()
 	return
 }
 
-func writeSeries(influxClient *client.Client, sendPoints []SendPoint) {
-	if len(sendPoints) < 1 {
-		log.Errorln("send points less then one")
+func writeSeries(client *influxdb.Client, config *influxdb.ClientConfig, buf []*influxdb.Series) {
+	log.Debugf("influxdb send series: %+v", buf)
+	if config.IsUDP {
+		client.WriteSeriesOverUDP(buf)
 		return
 	}
-	firstSendPoint := sendPoints[0]
-	points := make([]client.Point, 0)
-	for _, sp := range sendPoints {
-		points = append(points, *sp.point)
+	if err := client.WriteSeries(buf); err != nil {
+		log.Warnf("can't send series to db err: %s\n", err)
 	}
-	batchPoints := client.BatchPoints{
-		Points:          points,
-		Database:        firstSendPoint.sender.database,
-		RetentionPolicy: firstSendPoint.sender.retentionPolicy,
-		Precision:       firstSendPoint.sender.precision,
-	}
-	if log.AvailableForLevel(log.DEBUGLV) {
-		b, err := json.Marshal(&batchPoints)
-		if err != nil {
-			panic(err)
-		}
-		log.Debugf("query for send to db: %v", string(b))
-	}
-	if Conf.DryRun {
-		log.Infof("client dry-run send series: count %d", len(batchPoints.Points))
-		return
-	}
-	resp, err := influxClient.Write(batchPoints)
-	if err != nil {
-		log.Warnf("can't sent points to database err: %s\n", err)
-		log.Warnf("trying again")
-		for _, sendPoint := range sendPoints {
-			sendPoint.sender.sendCh <- &sendPoint
-		}
-	} else {
-		log.Infof("series sent %+v", batchPoints)
-	}
-	log.Debugln(resp)
 	return
 }
 
 func NewInfluxdbSender() Sender {
 	influxSender := &InfluxdbSender{
-		sendCh: influxCh,
+		sendCh: influxdbCh,
 	}
 	return Sender(influxSender)
 }
 
 type InfluxdbSender struct {
-	name            string
-	database        string
-	retentionPolicy string
-	tags            map[string]string
-	precision       string
-	extraFields     [][]*string
-	bufLen          int
-	sendCh          chan *SendPoint
-}
-
-func (self *InfluxdbSender) Name() string {
-	return "influxdb"
-}
-
-func (sender *InfluxdbSender) key() string {
-	return sender.database + sender.name
-}
-
-type SendPoint struct {
-	sender *InfluxdbSender
-	point  *client.Point
+	name        string
+	extraFields [][]*string
+	sendCh      chan *influxdb.Series
 }
 
 // TODO: write test
 func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
-	if val, ok := rawConfig.(map[string]interface{})["name"]; ok {
-		self.name = val.(string)
-	} else {
-		log.Fatalf("clientsender set config field %s should be present", "name")
-	}
-
-	if val, ok := rawConfig.(map[string]interface{})["database"]; ok {
-		self.database = val.(string)
-	} else {
-		self.database = *influxDatabase
-	}
-
-	if val, ok := rawConfig.(map[string]interface{})["retantion_policy"]; ok {
-		self.retentionPolicy = val.(string)
-	} else {
-		self.retentionPolicy = *influxRetentionPolicy
-	}
-
-	if val, ok := rawConfig.(map[string]interface{})["buffer"]; ok {
-		self.bufLen = int(val.(float64))
-	} else {
-		self.bufLen = *influxSendBuffer
-	}
-
+	self.name = rawConfig.(map[string]interface{})["name"].(string)
 	if extraFields, ok := rawConfig.(map[string]interface{})["extra_fields"]; ok {
 		switch extraFields.(type) {
 		case []interface{}:
@@ -203,24 +132,32 @@ func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
 	return nil
 }
 
-func (self *InfluxdbSender) Send(data interface{}) {
-	fields := make(map[string]interface{}, 0)
+func (self *InfluxdbSender) Name() string {
+	return "influxdb"
+}
 
-	for k, v := range data.(map[string]interface{}) {
-		fields[k] = v
+func (self *InfluxdbSender) Send(data interface{}) {
+	series := &influxdb.Series{
+		Name: self.name,
+	}
+	columns := make([]string, 0)
+	points := make([]interface{}, 0)
+	switch data.(type) {
+	case map[string]interface{}:
+		for key, value := range data.(map[string]interface{}) {
+			columns = append(columns, key)
+			points = append(points, value)
+		}
 	}
 
 	for _, extraField := range self.extraFields {
 		if val, err := ExtendValue(extraField[1]); err == nil {
-			fields[*extraField[0]] = val
+			columns = append(columns, *extraField[0])
+			points = append(points, val)
 		}
 	}
+	series.Columns = columns
+	series.Points = [][]interface{}{points}
 
-	point := &client.Point{
-		Name:      self.name,
-		Fields:    fields,
-		Timestamp: time.Now().UTC(),
-	}
-	sendPoint := &SendPoint{sender: self, point: point}
-	self.sendCh <- sendPoint
+	self.sendCh <- series
 }
