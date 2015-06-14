@@ -3,6 +3,7 @@ package logsend
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	log "github.com/ezotrank/logger"
 	client "github.com/influxdb/influxdb/client"
 	"net/url"
@@ -19,7 +20,7 @@ var (
 	influxDatabase        = flag.String("influx-database", "", "client database")
 	influxSendBuffer      = flag.Int("influx-buffer", 1, "buffer size")
 	influxSeriesName      = flag.String("influx-name", "", "client series name")
-	influxRetentionPolicy = flag.String("influx-retention-policy", "default", "retantion policy")
+	influxRetentionPolicy = flag.String("influx-retention-policy", "default", "retention policy")
 	influxExtraFields     = flag.String("influx-extra_fields", "", "Example: 'host,HOST service,www'")
 )
 
@@ -98,6 +99,7 @@ func writeSeries(influxClient *client.Client, sendPoints []SendPoint) {
 		Points:          points,
 		Database:        firstSendPoint.sender.database,
 		RetentionPolicy: firstSendPoint.sender.retentionPolicy,
+		Tags:            firstSendPoint.sender.tags,
 		Precision:       firstSendPoint.sender.precision,
 	}
 	if log.AvailableForLevel(log.DEBUGLV) {
@@ -119,7 +121,7 @@ func writeSeries(influxClient *client.Client, sendPoints []SendPoint) {
 			sendPoint.sender.sendCh <- &sendPoint
 		}
 	} else {
-		log.Infof("series sent %+v", batchPoints)
+		log.Infof("series sent %+v", len(batchPoints.Points))
 	}
 	log.Debugln(resp)
 	return
@@ -148,7 +150,7 @@ func (self *InfluxdbSender) Name() string {
 }
 
 func (sender *InfluxdbSender) key() string {
-	return sender.database + sender.name
+	return sender.database + sender.name + fmt.Sprintln(sender.tags)
 }
 
 type SendPoint struct {
@@ -170,7 +172,7 @@ func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
 		self.database = *influxDatabase
 	}
 
-	if val, ok := rawConfig.(map[string]interface{})["retantion_policy"]; ok {
+	if val, ok := rawConfig.(map[string]interface{})["retention_policy"]; ok {
 		self.retentionPolicy = val.(string)
 	} else {
 		self.retentionPolicy = *influxRetentionPolicy
@@ -180,6 +182,21 @@ func (self *InfluxdbSender) SetConfig(rawConfig interface{}) error {
 		self.bufLen = int(val.(float64))
 	} else {
 		self.bufLen = *influxSendBuffer
+	}
+
+	self.tags = make(map[string]string, 0)
+	if val, ok := rawConfig.(map[string]interface{})["tags"]; ok {
+		for k, v := range val.(map[string]interface{}) {
+			sVal := v.(string)
+			if val, err := ExtendValue(&sVal); err == nil {
+				self.tags[k] = val.(string)
+			}
+		}
+	}
+	if _, ok := self.tags["host"]; !ok {
+		sVal := "HOST"
+		host, _ := ExtendValue(&sVal)
+		self.tags["host"] = host.(string)
 	}
 
 	if extraFields, ok := rawConfig.(map[string]interface{})["extra_fields"]; ok {
@@ -217,9 +234,10 @@ func (self *InfluxdbSender) Send(data interface{}) {
 	}
 
 	point := &client.Point{
-		Name:      self.name,
-		Fields:    fields,
-		Timestamp: time.Now().UTC(),
+		Measurement: self.name,
+		Time:        time.Now().UTC(),
+		Fields:      fields,
+		Tags:        self.tags,
 	}
 	sendPoint := &SendPoint{sender: self, point: point}
 	self.sendCh <- sendPoint
