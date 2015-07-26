@@ -116,10 +116,6 @@ func writeSeries(influxClient *client.Client, sendPoints []SendPoint) {
 	resp, err := influxClient.Write(batchPoints)
 	if err != nil {
 		log.Warnf("can't sent points to database err: %s\n", err)
-		log.Warnf("trying again")
-		for _, sendPoint := range sendPoints {
-			sendPoint.sender.sendCh <- &sendPoint
-		}
 	} else {
 		log.Infof("series sent %+v", len(batchPoints.Points))
 	}
