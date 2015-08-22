@@ -1,0 +1,7 @@
+gom 'github.com/ActiveState/tail'
+gom 'github.com/ActiveState/tail/ratelimiter'
+gom 'github.com/ActiveState/tail/util'
+gom 'github.com/ActiveState/tail/watch'
+gom 'github.com/ezotrank/logger'
+gom 'github.com/howeyc/fsnotify'
+gom 'gopkg.in/tomb.v1'
