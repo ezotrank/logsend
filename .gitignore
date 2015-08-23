@@ -12,3 +12,6 @@
 /agent/_vendor
 /agent/build
 /server/target
+/server/target
+/server/project/target
+/server/project/project
