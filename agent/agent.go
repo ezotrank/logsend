@@ -11,8 +11,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
+	"github.com/golang/snappy"
 )
 
 var (
@@ -23,6 +23,7 @@ type Config struct {
 	PushAddr  string
 	FilesMask []string
 	ChunkSize int
+	Compress bool
 }
 
 type LogLine struct {
@@ -124,8 +125,11 @@ func process(config *Config) {
 			chunk = append(chunk, logLine)
 			if len(chunk) >= config.ChunkSize {
 				data := MarshaLogLines(chunk)
+				if config.Compress {
+					data = snappy.Encode(make([]byte,0), data)
+				}
 				conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
-				bytesCount, err := conn.Write(append([]byte(strconv.Itoa(len(data))), data...))
+				bytesCount, err := conn.Write(data)
 				if err != nil {
 					log.Errorf("can't write data to socket %v", err)
 					panic(err)

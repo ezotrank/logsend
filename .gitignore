@@ -9,3 +9,6 @@
 /secret
 /configs
 *.swp
+/agent/_vendor
+/agent/build
+/server/target

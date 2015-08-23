@@ -1,6 +1,0 @@
-{
-	"PushAddr": "localhost:4444",
-	"FilesMask": ["/home/ezo/local_dev/src/github.com/ezotrank/logsend/test.log"],
-        "ChunkSize": 10,
-	"Compress": true	
-}
